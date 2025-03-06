@@ -1,0 +1,39 @@
+@startuml BasicSetup
+title Basic Setup
+struct SceneDescription
+{
+    float f
+    float theta
+}
+
+struct Conics
+{
+    Matrix C1
+    Matrix C2
+}
+
+struct Homogrphy
+{
+    Matrix H
+}
+
+struct Image{
+    Homography h_true
+    Conics C_img
+}
+
+class "Scene Generator" as SG{
+    + generateScene(SceneDescription sd) : Image 
+}
+class "Rectifier" as R{
+    + rectify(Conics c) : Homography
+}
+class "Losser" as L{
+    + loss(Homography h_true, Homography h_rect) : float
+}
+
+class "Plotter" as P{
+    + plotConics(Conics c) : void
+}
+
+@enduml
