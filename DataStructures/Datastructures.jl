@@ -28,8 +28,8 @@ end
 
 
 module ImageModule
-    using ..HomographyModule
-    using ..ConicsModule
+    import ..HomographyModule: Homography
+    import ..ConicsModule: Conics
     struct Image
         h_true::Homography
         C_img::Conics

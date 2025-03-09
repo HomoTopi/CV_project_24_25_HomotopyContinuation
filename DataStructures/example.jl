@@ -1,13 +1,18 @@
-include("datastructures.jl")
-
-using .SceneDescriptionModule
-using .ConicsModule
-using .HomographyModule
-using .ImageModule
 
 
-h = HomographyModule.Homography(rand(3,3))
-c = ConicsModule.Conics(rand(3,3), rand(3,3))
-i = ImageModule.Image(h, c)
+module mainExample
+    include("Datastructures.jl")
 
-print(i)
+    import .SceneDescriptionModule: SceneDescription
+    import .HomographyModule: Homography
+    import .ConicsModule: Conics
+    import .ImageModule: Image
+    h = Homography(rand(3,3))
+    c = Conics(rand(3,3), rand(3,3))
+    i = Image(h, c)
+    s = SceneDescription(1,2)
+    display(s)
+    display(i)
+    display(h)
+    display(c)
+end

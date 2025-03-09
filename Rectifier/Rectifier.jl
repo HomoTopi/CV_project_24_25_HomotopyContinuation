@@ -1,8 +1,7 @@
-include("../DataStructures/datastructures.jl")
-
 module RectifierModule
-    using ..HomographyModule
-    using ..ConicsModule
+    include("../DataStructures/Datastructures.jl")
+    import .HomographyModule: Homography
+    import .ConicsModule: Conics
     
     ##################################
     ### ---- exposed functions ----###
