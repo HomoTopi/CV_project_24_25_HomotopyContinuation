@@ -1,0 +1,39 @@
+# How to compute how good a shape reconstructing homography is?
+
+## Introduction
+In this project we need to compare different image rectification algorithms, it thus become imperative to have a metric to compare the quality of the rectification. In this document we will discuss how to compute a metric to compare the quality of the rectification.
+
+## Problem Statement
+Given an image that is correctly rectified by applying the homography $H_{true}$, an algorithm computes a homography $H_{computed}$ to rectify the image. We need to compute a metric to compare the quality of the rectification.
+
+## Idea #1 - Compute the frobinious norm of the difference between the two homographies
+The first idea that comes to mind is to compute the frobinious norm of the difference between the two homographies. The frobinious norm of the difference between the two homographies is given by:
+$$
+\text{Frobinious Norm} = \sqrt{\sum_{i=1}^{3} \sum_{j=1}^{3} (H_{true}[i,j] - H_{computed}[i,j])^2}
+$$
+
+Since we are working in homogenous coordinates, the matrices must be normalized before computing the frobinious norm. The normalized homography is given by:
+$$
+H_{normalized} = \frac{H}{H[3,3]}
+$$
+
+## Idea #2 - Compare the images of the line at infinity
+The second idea is to compare the lines that are moved to infinity by the homographies. The line at infinity is given by the last row of the homography matrix. We can compute the line at infinity for both the true and computed homographies and compare them.
+In particular, we can compute the angle between the two lines at infinity. The angle between two lines is given by:
+$$
+\text{Angle} = \cos^{-1} \left( \frac{L_{true} \cdot L_{computed}}{\|L_{true}\| \|L_{computed}\|} \right)
+$$
+
+## Idea #3 - Study the "error Homography"
+The third idea is to compute the homography that maps the image rectified by the computed homography to the image rectified by the true homography. This homography is called the "error homography". We can then compute the frobinious norm of the error homography to compare the quality of the rectification.
+$$
+H_{error} = H_{true}^{-1} H_{computed}
+$$
+
+The closer this homography is to the identity matrix, the better the rectification.
+
+Since we are doing image reconstruction we are agnostic to similarity transformations, we thus need a metric on how far is the error homography from a similiraity transformation. See [this paper](./Papers/FAST%20AND%20INTERPRETABLE%202D%20HOMOGRAPHY%20DECOMPOSITION.pdf) for the SKS decomposition of the homography.
+$$
+H_{error} = H_{S2}^{-1} H_{K} H_{S1}
+$$
+Where $H_{S1}$ and $H_{S2}$ are similarity transformations and $H_{K}$ is a homography with 4 degrees of freedom. We can then compute the frobinious norm of $H_{K}$ to compare the quality of the rectification.
