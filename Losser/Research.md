@@ -6,10 +6,13 @@ In this project we need to compare different image rectification algorithms, it 
 ## Problem Statement
 Given an image that is correctly rectified by applying the homography $H_{true}$, an algorithm computes a homography $H_{computed}$ to rectify the image. We need to compute a metric to compare the quality of the rectification.
 
+## Interestig Observations
+> The Frobinious norm is invariant to rotations. This is because it is the sum of the squares of the singular values of the matrix. Since rotations do not change the singular values of a matrix, the frobinious norm is invariant to rotations.
+
 ## Idea #1 - Compute the frobinious norm of the difference between the two homographies
 The first idea that comes to mind is to compute the frobinious norm of the difference between the two homographies. The frobinious norm of the difference between the two homographies is given by:
 $$
-\text{Frobinious Norm} = \sqrt{\sum_{i=1}^{3} \sum_{j=1}^{3} (H_{true}[i,j] - H_{computed}[i,j])^2}
+FN(\text{Frobinious Norm}) = \sqrt{\sum_{i=1}^{3} \sum_{j=1}^{3} (H_{true}[i,j] - H_{computed}[i,j])^2}
 $$
 
 Since we are working in homogenous coordinates, the matrices must be normalized before computing the frobinious norm. The normalized homography is given by:
@@ -17,6 +20,34 @@ $$
 H_{normalized} = \frac{H}{H[3,3]}
 $$
 
+### Effecto of random noise
+Let's consider the effect of random Guassian noise on the frobinious norm of the difference between the two homographies. For this we can consider $H_{computed} = H_{true} + \varepsilon$ where $\varepsilon$ is a 3 by 3 matrix of random i.i.d. Guassian random variables: $\varepsilon_{i,j} \sim \mathcal{N}(0, \sigma^2)$. The indipendence of the entries of $\varepsilon$ is a strong assumption, but it is a good starting point.
+
+Let's now compute the frobinious norm of the difference between the two homographies. 
+$$
+FN_{\varepsilon} = \sqrt{\sum_{i=1}^{3} \sum_{j=1}^{3} (H_{true}[i,j] - (H_{true}[i,j] + \varepsilon[i,j]))^2} = \sqrt{\sum_{i=1}^{3} \sum_{j=1}^{3} \varepsilon[i,j]^2}
+$$
+
+Thanks to the i.i.d. assumption, the problem becomes a sum of the squares of 9 i.i.d. Guassian random variables. 
+$$
+FN_{\varepsilon} = \sqrt{\sum_{i=1}^{9} X_i^2} \text{  where  } X_i \sim \mathcal{N}(0, \sigma^2) 
+$$
+Equivalently, we can express it in terms of normal random variables:
+$$
+FN_{\varepsilon} = \sqrt{\sum_{i=1}^{9} (\sigma Z_i) ^2} = \sigma \sqrt{\sum_{i=1}^{9} (Z_i) ^2} \text{  where  } Z_i \sim \mathcal{N}(0, 1)
+$$
+
+The sum of the squares of 9 i.i.d. Guassian random variables is a Chi-squared distribution with 9 degrees of freedom. The frobinious norm of the difference between the two homographies is thus a Chi-squared distribution with 9 degrees of freedom scaled by $\sigma$.
+$$
+FN_{\varepsilon} \sim \sigma \sqrt{\chi^2(9)}
+$$
+
+Thus:
+
+$$
+\mathbb{E}[FN_{\varepsilon}] = 3 \sigma \\
+\text{Var}[FN_{\varepsilon}] = 3\sqrt{2} \sigma^2 \text{ To be checked}
+$$
 ## Idea #2 - Compare the images of the line at infinity
 The second idea is to compare the lines that are moved to infinity by the homographies. The line at infinity is given by the last row of the homography matrix. We can compute the line at infinity for both the true and computed homographies and compare them.
 In particular, we can compute the angle between the two lines at infinity. The angle between two lines is given by:
