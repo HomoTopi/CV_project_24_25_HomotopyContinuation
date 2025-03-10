@@ -6,9 +6,20 @@ module Datastructures
         theta::Float64
     end
 
+    struct Conic
+        M::Matrix{Float64} 
+
+        function Conic(M::Matrix{Float64})
+            if size(M) != (3, 3)
+                throw(DimensionMismatch("Conic matrix must be 3×3, got $(size(M))"))
+            end
+            new(M)
+        end
+    end
+
     struct Conics
-        C1::Matrix{Float64}
-        C2::Matrix{Float64}
+        C1::Conic
+        C2::Conic
     end
 
     struct Homography
@@ -20,5 +31,5 @@ module Datastructures
         C_img::Conics
     end
 
-    export SceneDescription, Conics, Homography, Image
+    export SceneDescription, Conic, Conics, Homography, Image
 end
