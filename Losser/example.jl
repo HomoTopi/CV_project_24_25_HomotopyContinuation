@@ -1,7 +1,13 @@
+#Reset environment
+using Pkg
+Pkg.activate("..")
+
 include("FrobNormLosser.jl")
+include("LINFLosser.jl")
 include("../ImageWarper/ImageWarper.jl")
 
 import .FrobNormLosserModule: computeLoss, Homography
+import .LINFLosserModule: computeLoss as LINFLosserComputeLoss, Homography as LINFLosserHomography
 import Images
 using Plots
 
@@ -25,7 +31,8 @@ H_computed = Homography(H_true.H + eps)
 
 println("H_true: $(H_true.H)")
 println("H_computed: $(H_computed.H)")
-println("Loss: $(computeLoss(H_true, H_computed))")
+println("Frob Loss: $(computeLoss(H_true, H_computed))")
+println("Linf Loss: $(LINFLosserComputeLoss(LINFLosserHomography(H_true.H), LINFLosserHomography(H_computed.H)))")
 
 # Warp the image
 warped_img_true = ImageWarperModule.warpImage(img, ImageWarperModule.Homography(H_true.H))
