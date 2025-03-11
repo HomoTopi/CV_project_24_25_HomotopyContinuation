@@ -4,10 +4,12 @@ Pkg.activate("..")
 
 include("FrobNormLosser.jl")
 include("LINFLosser.jl")
+include("ReprErrLosser.jl")
 include("../ImageWarper/ImageWarper.jl")
 
 import .FrobNormLosserModule: computeLoss, Homography
 import .LINFLosserModule: computeLoss as LINFLosserComputeLoss, Homography as LINFLosserHomography
+import .ReprErrLosserModule: computeLoss as ReprErrLossrComputeLoss, Homography as ReprErrLossrHomography
 import Images
 using Plots
 
@@ -29,10 +31,13 @@ eps = randn(3, 3) .* sigma .+ mu
 H_computed = Homography(H_true.H + eps)
 
 
-println("H_true: $(H_true.H)")
-println("H_computed: $(H_computed.H)")
+println("H_true:")
+println(H_true.H)
+println("H_computed:")
+println(H_computed.H)
 println("Frob Loss: $(computeLoss(H_true, H_computed))")
 println("Linf Loss: $(LINFLosserComputeLoss(LINFLosserHomography(H_true.H), LINFLosserHomography(H_computed.H)))")
+println("Repr Loss: $(ReprErrLossrComputeLoss(ReprErrLossrHomography(H_true.H), ReprErrLossrHomography(H_computed.H), size(img, 2), size(img, 1)))")
 
 # Warp the image
 warped_img_true = ImageWarperModule.warpImage(img, ImageWarperModule.Homography(H_true.H))

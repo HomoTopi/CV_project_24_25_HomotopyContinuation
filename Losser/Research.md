@@ -68,3 +68,11 @@ $$
 H_{error} = H_{S2}^{-1} H_{K} H_{S1}
 $$
 Where $H_{S1}$ and $H_{S2}$ are similarity transformations and $H_{K}$ is a homography with 4 degrees of freedom. We can then compute the frobinious norm of $H_{K}$ to compare the quality of the rectification.
+
+## Idea #4 - Compute the reprojection error
+The fourth idea is to compute the reprojection error. We can compute the reprojection error by projecting the corners of the image rectified by the true homography to the image rectified by the computed homography. We can then compute the distance between the projected corners and the actual corners.
+Given the corners of the image to be rectified $C = \{[0, 0, 1]^T, [w, 0, 1]^T, [0, h, 1]^T, [w, h, 1]^T\}$ where $w$ and $h$ are the width and height of the image respectively. The corners of the image rectified by the true homography are given by $C_{true} = H_{true} C$. The corners of the image rectified by the computed homography are given by $C_{computed} = H_{computed} C$. The reprojection error is given by:
+$$
+RE = \sum_{i=1}^{4} \|C_{true}[i] - C_{computed}[i]\| = \sum_{i=1}^{4} \|H_{true} C[i] - H_{computed} C[i]\| = \\
+\sum_{i=1}^{4} \|(H_{true} - H_{computed}) C[i]\|
+$$
