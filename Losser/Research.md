@@ -58,7 +58,7 @@ $$
 ## Idea #3 - Study the "error Homography"
 The third idea is to compute the homography that maps the image rectified by the computed homography to the image rectified by the true homography. This homography is called the "error homography". We can then compute the frobinious norm of the error homography to compare the quality of the rectification.
 $$
-H_{error} = H_{true}^{-1} H_{computed}
+H_{error} = H_{computed}^{-1} H_{True}
 $$
 
 The closer this homography is to the identity matrix, the better the rectification.
@@ -76,3 +76,18 @@ $$
 RE = \sum_{i=1}^{4} \|C_{true}[i] - C_{computed}[i]\| = \sum_{i=1}^{4} \|H_{true} C[i] - H_{computed} C[i]\| = \\
 \sum_{i=1}^{4} \|(H_{true} - H_{computed}) C[i]\|
 $$
+
+
+## Idea #5 - Frobinious norm of the "error homography"
+The fifth idea is to compute the frobinious norm of the "error homography" minus the identity. The error homography is given by:
+$$
+H_{error} = H_{computed}^{-1} H_{true}
+$$
+
+The closer this homography is to the identity matrix, the better the rectification.
+
+The frobinious norm of the error homography is given by:
+$$
+FN_{error} = \sqrt{\sum_{i=1}^{3} \sum_{j=1}^{3} (H_{computed}^{-1} H_{true}[i,j] - Id)^2}
+$$
+
