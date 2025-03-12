@@ -4,6 +4,15 @@ module Datastructures
     struct SceneDescription
         f::Float64
         theta::Float64
+        circle1::Vector{Float64} # [centerX::Float64, centerY::Float64, radius::Float64]
+        circle2::Vector{Float64}
+
+        function SceneDescription(f::Float64, theta::Float64, circle1::Vector{Float64}, circle2::Vector{Float64})
+            if(circle1[3]<0 || circle2[3]<0)
+                throw(ArgumentError("Circle radius must be positive"))
+            end
+            new(f, theta, circle1, circle2)
+        end
     end
 
     struct Conic
@@ -26,10 +35,10 @@ module Datastructures
         H::Matrix{Float64}
     end
 
-    struct Image
+    struct Img
         h_true::Homography
         C_img::Conics
     end
 
-    export SceneDescription, Conic, Conics, Homography, Image
+    export SceneDescription, Conic, Conics, Homography, Img
 end
