@@ -43,7 +43,7 @@ println("Frob Loss: $(computeLoss(H_true, H_computed))")
 println("Linf Loss: $(LINFLosserComputeLoss(LINFLosserHomography(H_true.H), LINFLosserHomography(H_computed.H)))")
 println("Repr Loss: $(ReprErrLossrComputeLoss(ReprErrLossrHomography(H_true.H), ReprErrLossrHomography(H_computed.H), size(img, 2), size(img, 1)))")
 println("Frob Norm Error Homography Loss: $(FrobNormErrHomLosserComputeLoss(FrobNormErrHomLosserHomography(H_true.H), FrobNormErrHomLosserHomography(H_computed.H)))")
-println("SKS Loss: $(SKSLosserComputeLoss(SKSLosserHomography(H_true.H), SKSLosserHomography(H_computed.H), size(img, 2), size(img, 1)))")
+#println("SKS Loss: $(SKSLosserComputeLoss(SKSLosserHomography(H_true.H), SKSLosserHomography(H_computed.H), size(img, 2), size(img, 1)))")
 
 # Warp the image
 warped_img_true = ImageWarperModule.warpImage(img, ImageWarperModule.Homography(H_true.H))
