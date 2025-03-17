@@ -1,6 +1,6 @@
 import numpy as np
 import logging
-from DataStructures.datastructures import Conic, Conics
+from ..DataStructures.datastructures import Conic, Conics
 from .standard_rectifier import StandardRectifier
 
 # Set up logging
@@ -8,6 +8,7 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
+
 
 def main():
     """
@@ -20,23 +21,23 @@ def main():
         [0.2, 1.0, 0.1],
         [0.3, 0.1, -1.0]
     ])
-    
+
     M2 = np.array([
         [1.2, -0.1, 0.4],
         [-0.1, 0.8, 0.2],
         [0.4, 0.2, -1.5]
     ])
-    
+
     # Create Conic objects
     C1 = Conic(M1)
     C2 = Conic(M2)
-    
+
     # Create a Conics object containing both conics
     conics = Conics(C1, C2)
-    
+
     # Create the rectifier
     rectifier = StandardRectifier()
-    
+
     # Perform rectification
     try:
         homography = rectifier.rectify(conics)
@@ -48,4 +49,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main() 
+    main()
