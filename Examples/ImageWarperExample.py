@@ -1,10 +1,3 @@
-try:
-    import os
-    import sys
-    sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-except NameError:
-    pass
-
 from HomoTopiContinuation.DataStructures.datastructures import Homography
 from HomoTopiContinuation.ImageWarper.ImageWarper import ImageWarper
 import cv2
@@ -12,9 +5,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Load the image
-# print current path from where the script is running
-print(os.getcwd())
-img = cv2.imread('./src/Examples/TestImages/Lena.png')
+img = cv2.imread('./Examples/TestImages/Lena.png')
+assert img is not None
 
 # Create a homography matrix
 H = Homography(
