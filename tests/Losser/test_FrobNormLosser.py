@@ -4,7 +4,6 @@ from HomoTopiContinuation.DataStructures.datastructures import Homography
 
 
 def test_FrobNormLosser_computeLossShouldReturnFrobeniusNormOfDifference():
-
     H1 = Homography(np.array([
         [1, 2, 3],
         [4, 5, 6],
