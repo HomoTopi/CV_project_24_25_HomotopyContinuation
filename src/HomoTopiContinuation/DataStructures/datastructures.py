@@ -140,7 +140,7 @@ class Homography:
 
         self.H = H
 
-    def __call__(self):
+    def __call__(self) -> np.ndarray:
         """
         Return the homography matrix.
 
@@ -148,6 +148,15 @@ class Homography:
             numpy.ndarray: The homography matrix
         """
         return self.H
+
+    def inv(self) -> np.ndarray:
+        """
+        Return the inverse of the homography matrix.
+
+        Returns:
+            numpy.ndarray: The inverse of the homography matrix
+        """
+        return la.inv(self.H)
 
 
 class Img:
