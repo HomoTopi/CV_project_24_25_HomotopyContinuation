@@ -158,6 +158,18 @@ class Homography:
         """
         return la.inv(self.H)
 
+    def __mul__(self, other: 'Homography') -> 'Homography':
+        """
+        Multiply two homographies.
+
+        Args:
+            other (Homography): The other homography to multiply with
+
+        Returns:
+            Homography: The result of the multiplication
+        """
+        return Homography(self.H @ other.H)
+
 
 class Img:
     """
