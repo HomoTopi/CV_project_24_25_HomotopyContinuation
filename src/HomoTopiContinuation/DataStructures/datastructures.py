@@ -84,6 +84,25 @@ class Conics:
         """
         return self.C1, self.C2
 
+class Circle:
+    def __init__(self, center: np.ndarray, radius: float):
+        """
+        Initialize a Circle object.
+
+        Args:
+            center (numpy.ndarray): The center of the circle
+            radius (float): The radius of the circle
+        Raises:
+            ValueError: If the radius is negative
+        """
+        if radius < 0:
+            raise ValueError("Circle radius must be positive")
+        M = np.array([
+            [1, 0, -center[0]],
+            [0, 1, -center[1]],
+            [-center[0], -center[1], center[0]**2 + center[1]**2 - radius**2]
+        ])
+        self.C = M
 
 class SceneDescription:
     """
@@ -92,30 +111,25 @@ class SceneDescription:
     Attributes:
         f (float): Focal length
         theta (float): Camera angle
-        circle1 (list): Parameters of the first circle [centerX, centerY, radius]
-        circle2 (list): Parameters of the second circle [centerX, centerY, radius]
+        circle1 (circle): First circle
+        circle2 (circle): Second circle
     """
 
-    def __init__(self, f: float, theta: float, circle1: Conic, circle2: Conic):
+    def __init__(self, f: float, theta: float, circle1: Circle, circle2: Circle):
         """
         Initialize a SceneDescription object.
 
         Args:
             f (float): Focal length
             theta (float): Camera angle
-            circle1 (list): Parameters of the first circle [centerX, centerY, radius]
-            circle2 (list): Parameters of the second circle [centerX, centerY, radius]
+            circle1 (Circle): Parameters of the first circle
+            circle2 (Circle): Parameters of the second circle
 
-        Raises:
-            ValueError: If any circle has a negative radius
         """
-        if circle1[2] < 0 or circle2[2] < 0:
-            raise ValueError("Circle radius must be positive")
-
         self.f = f
         self.theta = theta
-        self.circle1 = circle1
-        self.circle2 = circle2
+        self.circle1 = Conic(circle1.C)
+        self.circle2 = Conic(circle2.C)
 
 
 class Homography:
