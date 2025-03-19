@@ -2,27 +2,48 @@ from HomoTopiContinuation.DataStructures.datastructures import Homography
 from HomoTopiContinuation.ImageWarper.ImageWarper import ImageWarper
 from HomoTopiContinuation.Losser.FrobNormLosser import FrobNormLosser
 from HomoTopiContinuation.Losser.ReconstructionErrorLosser import ReconstructionErrorLosser
+from HomoTopiContinuation.Losser.AngleDistortionLosser import AngleDistortionLosser
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
+
+class Experiment:
+    imWarper = ImageWarper()
+    separator = '=' * 50
+
+    def __init__(self, H_true: Homography, H_computed: Homography, points: np.ndarray, title: str):
+        self.H_true = H_true
+        self.H_computed = H_computed
+        self.points = points
+        self.title = title
+
+    def printSeparator():
+        print(Experiment.separator)
+
+    def printLosses(self):
+        Experiment.printSeparator()
+        print(f'Experiment: {self.title}')
+        Experiment.printSeparator()
+
+        frobLoss = FrobNormLosser.computeLoss(self.H_true, self.H_computed)
+        print(f'\tFrobenius Norm Loss: {frobLoss:.4f}')
+
+        reconstructionErrorLoss = ReconstructionErrorLosser.computeLoss(
+            self.H_true, self.H_computed, self.points)
+        print(f'\tReconstruction Error Loss: {reconstructionErrorLoss:.4f}')
+
+        angleLoss = AngleDistortionLosser.computeLoss(
+            self.H_true, self.H_computed)
+        print(f'\tAngle Loss: {angleLoss:.4f}')
+        Experiment.printSeparator()
+
+    def warpImage(self, img):
+        return Experiment.imWarper(img, self.H_computed)
+
+
 # Load the image
 img = cv2.imread('./Examples/TestImages/Lena.png')
-
-# Create a homography matrix
-H_true = Homography(
-    np.array([
-        [1.0, 0, 0],
-        [0, 1.0, 0],
-        [0, 0, 1.0]
-    ])
-)
-
-mu = 0
-sigma = 0.001
-H_computed = Homography(
-    H_true() + np.random.normal(mu, sigma, H_true().shape)
-)
 
 w, h = img.shape[1], img.shape[0]
 
@@ -33,34 +54,82 @@ points = np.array([
     [w, h, 1]
 ]).T
 
-# Compute the losses
-frobLoss = FrobNormLosser.computeLoss(H_true, H_computed)
-print(f'Frobenius Norm Loss: {frobLoss}')
+# Create a homography matrix
+H_true = Homography(
+    np.array([
+        [1.0, 0, 0],
+        [0, 1.0, 0],
+        [0, 0, 1.0]
+    ])
+)
 
-reconstructionErrorLoss = ReconstructionErrorLosser.computeLoss(
-    H_true, H_computed, points)
-print(f'Reconstruction Error Loss: {reconstructionErrorLoss}')
+# Experiment parameters
 
+# Gausian Noise
+mu = 0
+sigma = 0.001
 
-# Warp the image
-warped_img_true = ImageWarper()(img, H_true)
-warped_img_computed = ImageWarper()(img, H_computed)
+# Translation
+translation_vector = np.array([10, 10, 1])
+
+# Rotation
+theta = 5 * np.pi / 180
+
+# Skew
+skew = 0.1
+
+experiments = [
+    Experiment(H_true, Homography(np.eye(3)), points, 'Identity'),
+    Experiment(H_true, Homography(
+        np.array([
+            [1.0, 0, translation_vector[0]],
+            [0, 1.0, translation_vector[1]],
+            [0.0, 0.0, translation_vector[2]]
+        ])
+    ), points, 'Translation'),
+    Experiment(H_true, Homography(
+        np.array([
+            [np.cos(theta), -np.sin(theta), 0],
+            [np.sin(theta), np.cos(theta), 0],
+            [0, 0, 1]
+        ])
+    ), points, 'Rotation'),
+    Experiment(H_true, Homography(
+        np.array([
+            [1.0, skew, 0],
+            [0, 1.0, 0],
+            [0, 0, 1.0]
+        ])
+    ), points, 'Skew'),
+    Experiment(H_true, Homography(H_true() + np.random.normal(mu, sigma, (3, 3))),
+               points, 'Gaussian Noise')
+]
+
+# Plotting
+plotsWidth = 3
+nPlots = len(experiments) + 1
+plotsHeight = int(np.ceil(nPlots / plotsWidth))
+print(plotsHeight, plotsWidth)
+
+warped_img_true = Experiment.imWarper(img, H_true)
 
 # Display the original and warped images
 plt.figure(figsize=(10, 5))
-plt.subplot(1, 3, 1)
+plt.subplot(plotsHeight, plotsWidth, 1)
 plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
 plt.title('Original Image')
 plt.axis('off')
 
-plt.subplot(1, 3, 2)
+plt.subplot(plotsHeight, plotsWidth, 2)
 plt.imshow(cv2.cvtColor(warped_img_true, cv2.COLOR_BGR2RGB))
 plt.title('Warped Image True')
 plt.axis('off')
 
-plt.subplot(1, 3, 3)
-plt.imshow(cv2.cvtColor(warped_img_computed, cv2.COLOR_BGR2RGB))
-plt.title('Warped Image Computed')
-plt.axis('off')
+for i, experiment in enumerate(experiments):
+    experiment.printLosses()
+    plt.subplot(plotsHeight, plotsWidth, i + 2)
+    plt.imshow(cv2.cvtColor(experiment.warpImage(img), cv2.COLOR_BGR2RGB))
+    plt.title(experiment.title)
+    plt.axis('off')
 
 plt.show()
