@@ -67,7 +67,7 @@ H_true = Homography(
     np.array([
         [1.0, 0, 0],
         [0, 1.0, 0],
-        [0, 0, 1]
+        [1.0e-10, 0, 1]
     ])
 )
 
@@ -94,21 +94,21 @@ experiments = [
             [0, 1.0, translation_vector[1]],
             [0.0, 0.0, translation_vector[2]]
         ])
-    ), points, 'Translation'),
+    ) * H_true, points, 'Translation'),
     Experiment(H_true, Homography(
         np.array([
             [np.cos(theta), -np.sin(theta), 0],
             [np.sin(theta), np.cos(theta), 0],
             [0, 0, 1]
         ])
-    ), points, 'Rotation'),
+    ) * H_true, points, 'Rotation'),
     Experiment(H_true, Homography(
         np.array([
             [1.0, skew, 0],
             [0, 1.0, 0],
             [0, 0, 1.0]
         ])
-    ), points, 'Skew'),
+    ) * H_true, points, 'Skew'),
     Experiment(H_true, Homography(H_true() + np.random.normal(mu, sigma, (3, 3))),
                points, 'Gaussian Noise')
 ]
