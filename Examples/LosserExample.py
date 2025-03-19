@@ -3,6 +3,7 @@ from HomoTopiContinuation.ImageWarper.ImageWarper import ImageWarper
 from HomoTopiContinuation.Losser.FrobNormLosser import FrobNormLosser
 from HomoTopiContinuation.Losser.ReconstructionErrorLosser import ReconstructionErrorLosser
 from HomoTopiContinuation.Losser.AngleDistortionLosser import AngleDistortionLosser
+from HomoTopiContinuation.Losser.LinfLosser import LinfLosser
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
@@ -36,6 +37,13 @@ class Experiment:
         angleLoss = AngleDistortionLosser.computeLoss(
             self.H_true, self.H_computed)
         print(f'\tAngle Loss: {angleLoss:.4f}')
+
+        linfLoss = LinfLosser.computeLoss(self.H_true, self.H_computed)
+        if (linfLoss is not None):
+            print(f'\tLinf Loss: {linfLoss:.4f}')
+        else:
+            print('\tLinf Loss: Not computable')
+
         Experiment.printSeparator()
 
     def warpImage(self, img):
@@ -59,7 +67,7 @@ H_true = Homography(
     np.array([
         [1.0, 0, 0],
         [0, 1.0, 0],
-        [0, 0, 1.0]
+        [0, 0, 1]
     ])
 )
 
@@ -79,7 +87,7 @@ theta = 5 * np.pi / 180
 skew = 0.1
 
 experiments = [
-    Experiment(H_true, Homography(np.eye(3)), points, 'Identity'),
+    Experiment(H_true, H_true, points, 'True Homography'),
     Experiment(H_true, Homography(
         np.array([
             [1.0, 0, translation_vector[0]],
