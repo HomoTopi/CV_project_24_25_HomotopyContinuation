@@ -22,4 +22,4 @@ class ReconstructionErrorLosser(Losser):
         """
         warped_points_true = h_true().dot(points)
         warped_points_computed = h_computed().dot(points)
-        return np.linalg.norm(warped_points_true - warped_points_computed)
+        return np.linalg.norm(warped_points_true - warped_points_computed, axis=0).mean()
