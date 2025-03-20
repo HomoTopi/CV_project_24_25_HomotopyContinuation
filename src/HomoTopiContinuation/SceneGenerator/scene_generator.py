@@ -8,8 +8,8 @@ class SceneGenerator:
 
     This class creates scenes from the given parameters.
     """
-
-    def generate_scene(self, scene_description: SceneDescription) -> Img:
+    @staticmethod
+    def generate_scene(scene_description: SceneDescription) -> Img:
         """
         Generate a scene from the given description.
 
@@ -26,7 +26,7 @@ class SceneGenerator:
         # Plot the true conics
         plotter.plot_conics(Conics(C1_true, C2_true),"True Conics")
         # Compute the homography
-        H = self.compute_H(scene_description)
+        H = SceneGenerator.compute_H(scene_description)
         H_inv = H.inv()
         # Apply homography to the true conics
         C1 = Conic(H_inv.T @ C1_true.M @ H_inv)
@@ -36,8 +36,8 @@ class SceneGenerator:
         plotter.plot_conics(conics,"Transformed Conics")
         return Img(H,conics)
 
-    
-    def compute_H(self, scene_description: SceneDescription) -> Homography:
+    @staticmethod
+    def compute_H(scene_description: SceneDescription) -> Homography:
         """
         Compute the homography matrix from the scene description using plane-to-image homography.
 
@@ -50,7 +50,7 @@ class SceneGenerator:
         # Focal length
         f = scene_description.f
         # Convert theta to radians
-        theta = np.radians(scene_description.theta)
+        y_rotation = np.radians(scene_description.y_rotation)
 
         # Intrinsic matrix (assuming natural camera and principal point at (0,0))
         K = np.array([[f, 0, 0],
@@ -59,13 +59,34 @@ class SceneGenerator:
         
         # Reference frame
         r_pi1 = np.array([1, 0, 0])
-        r_p12 = np.array([0, np.cos(theta), np.sin(theta)])
-        o_pi = np.array([0, 0, 1])
+        r_p12 = np.array([0, np.cos(y_rotation), np.sin(y_rotation)])
+        o_pi = scene_description.offset
 
         # Reference matrix
         referenceMatrix = np.array([r_pi1, r_p12, o_pi]).T
 
         return Homography(K @ referenceMatrix)
+    
+    @staticmethod
+    def compute_reference_matrix(scene_description: SceneDescription) -> np.ndarray:
+        """
+        Compute the reference matrix from the scene description.
+
+        Args:
+            scene_description (SceneDescription): The description of the scene
+
+        Returns:
+            np.ndarray: The reference matrix
+        """
+        # Convert theta to radians
+        y_rotation = np.radians(scene_description.theta)
+
+        # Reference frame
+        r_pi1 = np.array([1, 0, 0])
+        r_p12 = np.array([0, np.cos(y_rotation), np.sin(y_rotation)])
+        o_pi = scene_description.offset
+
+        return np.array([r_pi1, r_p12, o_pi]).T
 
 
 
