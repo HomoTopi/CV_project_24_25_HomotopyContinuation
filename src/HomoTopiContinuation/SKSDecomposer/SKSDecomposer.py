@@ -110,8 +110,8 @@ class SKSDecomposer():
 
 if __name__ == "__main__":
     H = Homography(np.array([
-        [1, 2, 3],
-        [4, 5, 6],
+        [1, 0, 3],
+        [0, 1, 6],
         [0, 0, 1]
     ]))
 
