@@ -19,8 +19,8 @@ class SceneGenerator:
         Returns:
             Img: The pair of conics and the true homography
         """
-        C1_true = scene_description.circle1
-        C2_true = scene_description.circle2
+        C1_true = scene_description.circle1.to_conic()
+        C2_true = scene_description.circle2.to_conic()
         print('Original conics')
         print(C1_true.M)
         print(C2_true.M)
@@ -61,29 +61,12 @@ class SceneGenerator:
                     [0, f, 0],
                     [0, 0, 1]])
         
+        # Reference frame
         r_pi1 = np.array([1, 0, 0])
         r_p12 = np.array([0, np.cos(theta), np.sin(theta)])
         o_pi = np.array([0, 0, 1])
 
         referenceMatrix = np.array([r_pi1, r_p12, o_pi]).T
-
-        # [r_pi1, r_pi2, o_pi]
-        # r_pi1, r_pi2 are the unit vectors in the plane coordinate system
-        # o_pi is the origin of the plane coordinate system
-        # r_pi1 = [1, 0, 0]
-        # r_pi2 = [0, 1, 0]
-        # o_pi = [0, 0, 1]
-        # matrix = np.array([[np.cos(theta), -np.sin(theta), 0],
-        #                   [np.sin(theta), np.cos(theta), 0],
-        #                 [0, 0, 1]])
-
-        # matrix = np.array([[np.cos(theta), 0, np.sin(theta)],
-        #                    [0, 1, 0],
-        #                 [-np.sin(theta), 0, np.cos(theta)]])
-        # R_world = np.array([[1, 0, 0],
-        #                     [0, 1, 0],
-        #                     [0, 0, 1]])
-        # R_camera = matrix @ R_world
          
         H = K @ referenceMatrix
 

@@ -97,12 +97,20 @@ class Circle:
         """
         if radius < 0:
             raise ValueError("Circle radius must be positive")
-        M = np.array([
-            [1, 0, -center[0]],
-            [0, 1, -center[1]],
-            [-center[0], -center[1], center[0]**2 + center[1]**2 - radius**2]
+        
+        self.center = center
+        self.radius = radius
+    
+    def to_conic(self):
+        """
+        Convert the circle to a conic.
+        """
+        conic = np.array([
+            [1, 0, -self.center[0]],
+            [0, 1, -self.center[1]],
+            [-self.center[0], -self.center[1], self.center[0]**2 + self.center[1]**2 - self.radius**2]
         ])
-        self.C = M
+        return Conic(conic)
 
 class SceneDescription:
     """
@@ -128,8 +136,8 @@ class SceneDescription:
         """
         self.f = f
         self.theta = theta
-        self.circle1 = Conic(circle1.C)
-        self.circle2 = Conic(circle2.C)
+        self.circle1 = circle1
+        self.circle2 = circle2
 
 
 class Homography:
