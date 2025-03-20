@@ -1,7 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from HomoTopiContinuation.DataStructures.datastructures import Conics, Conic, Circle
+from HomoTopiContinuation.DataStructures.datastructures import Conics, Conic, Circle, SceneDescription
 from HomoTopiContinuation.Plotter.CameraPlotter import CameraPlotter
+import HomoTopiContinuation.SceneGenerator.scene_generator as sg
 import seaborn as sns
 
 
@@ -51,7 +52,8 @@ class Plotter:
         self.ax.set_title(title)
         self.plotNumber += 1
         if axisSame:
-            self.ax.set_box_aspect([1, 1, 1])
+            # Set the axis to have the same scale
+            self.ax.set_aspect('equal', adjustable='datalim')
 
         self.ax.set_xlabel('X')
         self.ax.set_ylabel('Y')
@@ -72,7 +74,7 @@ class Plotter:
 
         self.ax.contour(X, Y, Z, levels=[0], colors=color, label=conicName)
 
-    def plotCamera(self, center=np.array([0.0, 0.0, 0.0]), yaw=0, pitch=0, roll=0, size=.1, color='blue', bodyRatio=0.5):
+    def plotCamera(self, center=np.array([0.0, 0.0, 0.0]), yaw=0, pitch=0, roll=0, size=.2, color='blue', bodyRatio=0.5):
         """
         Plot a camera.
         """
@@ -82,33 +84,30 @@ class Plotter:
                                size, color, bodyRatio)
         camera.plotCamera(self.ax)
 
-    def plot_conics(self, conics: Conics, title: str):
-        """
-        Plot the conics.
-        Args:
-            conics (Conics): The pair of conics
-        """
-        C1 = conics.C1
-        C2 = conics.C2
-        # Extract coefficients of conics
-        a1, b1, c1, d1, e1, f1 = C1.to_algebraic_form()
-        a2, b2, c2, d2, e2, f2 = C2.to_algebraic_form()
-        # Range of x and y values
-        x = np.linspace(-2, 2, 1000)
-        y = np.linspace(-2, 2, 1000)
+    def plotConic3D(self, conic: Conic, sceneDescription: sg.SceneDescription, x_range=(-1, 1, 100), y_range=(-1, 1, 100), conicName='Conic', color='r', tol=1e-2):
+        if (self.dimention != 3):
+            raise ValueError("The current axis is not 3D.")
+
+        a, b, c, d, e, f = conic.to_algebraic_form()
+
+        x = np.linspace(x_range[0], x_range[1], x_range[2])
+        y = np.linspace(y_range[0], y_range[1], y_range[2])
         X, Y = np.meshgrid(x, y)
-        # Compute Z values for both conics
-        Z1 = a1*X**2 + b1*X*Y + c1*Y**2 + d1*X + e1*Y + f1
-        Z2 = a2*X**2 + b2*X*Y + c2*Y**2 + d2*X + e2*Y + f2
-        fig = plt.figure(figsize=(8, 8))
-        ax = fig.add_subplot(111, projection='3d')
-        ax.contour3D(X, Y, Z1, levels=[0], colors='r')
-        ax.contour3D(X, Y, Z2, levels=[0], colors='b')
-        # ax.contour3D(X, Y, Z1, colors='r')
-        # ax.contour3D(X, Y, Z2, colors='b')
-        ax.set_title(title)
-        ax.set_box_aspect([1, 1, 1])
-        plt.show()
+
+        Z = a * X**2 + b * X * Y + c * Y**2 + d * X + e * Y + f
+
+        mask = np.abs(Z) < tol
+        X = X[mask]
+        Y = Y[mask]
+
+        referenceMatrix = sg.SceneGenerator.compute_reference_matrix(
+            sceneDescription)
+
+        points = np.array([X, Y, np.ones_like(X)])
+        points = referenceMatrix @ points
+
+        self.ax.scatter(points[0], points[1], points[2],
+                        label=conicName, color=color)
 
     def show(self):
         """
@@ -127,6 +126,12 @@ if __name__ == "__main__":
     plotter.newAxis(title="Conic")
     plotter.plotConic2D(conic)
 
+    c = Circle(np.array([0, 0]), 1)
+    conic = c.to_conic()
+
+    sd = sg.SceneDescription(1, 30, np.array([0, 0, 1]), c, c)
+
     plotter.new3DAxis(title="Conic")
     plotter.plotCamera()
+    plotter.plotConic3D(conic, sd)
     plotter.show()
