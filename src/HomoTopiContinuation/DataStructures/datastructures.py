@@ -118,7 +118,8 @@ class SceneDescription:
 
     Attributes:
         f (float): Focal length
-        theta (float): Camera angle
+        y_rotation (float): Camera angle in degrees around the y-axis
+        offset (numpy.ndarray): Offset of the camera from the origin
         circle1 (circle): First circle
         circle2 (circle): Second circle
     """
@@ -129,9 +130,10 @@ class SceneDescription:
 
         Args:
             f (float): Focal length
-            theta (float): Camera angle
+            y_rotation (float): Rotation angle around the y-axis in degrees 
             circle1 (Circle): Parameters of the first circle
             circle2 (Circle): Parameters of the second circle
+            offset (numpy.ndarray): Offset of the camera from the origin
 
         """
         if f <= 0:
