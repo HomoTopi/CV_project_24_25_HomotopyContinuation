@@ -7,9 +7,20 @@ import seaborn as sns
 
 
 class Plotter:
+    """
+    A class for plotting both 2D and 3D plots.
+    There are methods to plot conics and cameras.
+    """
+
     def __init__(self, nPlotsx=1, nPlotsy=1, figsize=(10, 10), title="My plot"):
         """
         Initialize a Plotter object.
+
+        Args:
+            nPlotsx (int): Number of plots in x direction
+            nPlotsy (int): Number of plots in y direction
+            figsize (tuple): Figure size
+            title (str): Title of the figure
         """
         sns.set_theme()
         self.figure = plt.figure(figsize=figsize)
@@ -23,7 +34,15 @@ class Plotter:
 
     def newAxis(self, title="", axisSame=True):
         """
-        Create a new axis.
+        Create a new 2D axis. The new axis will be set as the current axis for subsequent plots.
+
+        Args:
+            title (str): Title of the axis
+            axisSame (bool): If True, the axis will have the same scale
+
+        Raises:
+            ValueError: If the maximum number of plots is reached
+
         """
         if (self.plotNumber > self.maxPlots):
             raise ValueError(
@@ -41,7 +60,14 @@ class Plotter:
 
     def new3DAxis(self, title="", axisSame=True):
         """
-        Create a new 3D axis.
+        Create a new 3D axis. The new axis will be set as the current axis for subsequent plots.
+
+        Args:
+            title (str): Title of the axis
+            axisSame (bool): If True, the axis will have the same scale
+
+        Raises:
+            ValueError: If the maximum number of plots is reached
         """
         if (self.plotNumber > self.maxPlots):
             raise ValueError(
@@ -62,6 +88,20 @@ class Plotter:
         self.dimention = 3
 
     def plotConic2D(self, conic: Conic, x_range=(-1, 1, 100), y_range=(-1, 1, 100), conicName='Conic', color='r'):
+        """
+        Plot a 2D conic.
+
+        Args:
+            conic (Conic): The conic to plot
+            x_range (tuple): The range of x values expressed as (start, end, number of points)
+            y_range (tuple): The range of y values expressed as (start, end, number of points)
+            conicName (str): The name of the conic
+            color (str): The color of the conic
+
+        Raises:
+            ValueError: If the current axis is not 2D
+        """
+
         if (self.dimention != 2):
             raise ValueError("The current axis is not 2D.")
         a, b, c, d, e, f = conic.to_algebraic_form()
@@ -77,6 +117,15 @@ class Plotter:
     def plotCamera(self, center=np.array([0.0, 0.0, 0.0]), yaw=0, pitch=0, roll=0, size=.2, color='blue', bodyRatio=0.5):
         """
         Plot a camera.
+
+        Args:
+            center (numpy.ndarray): The center of the camera expressed as a 3D point
+            yaw (float): The yaw angle of the camera in degrees
+            pitch (float): The pitch angle of the camera in degrees
+            roll (float): The roll angle of the camera in degrees
+            size (float): The size of the camera
+            color (str): The color of the camera
+            bodyRatio (float): The ratio of the body the ratio between the body height and the body width, default 0.5
         """
         if (self.dimention != 3):
             raise ValueError("The current axis is not 3D.")
@@ -85,6 +134,22 @@ class Plotter:
         camera.plotCamera(self.ax)
 
     def plotConic3D(self, conic: Conic, sceneDescription: sg.SceneDescription, x_range=(-1, 1, 100), y_range=(-1, 1, 100), conicName='Conic', color='r', tol=1e-2):
+        """
+        Plot a 3D conic.
+
+        Args:
+            conic (Conic): The conic to plot
+            sceneDescription (sg.SceneDescription): The description of the scene
+            x_range (tuple, optional): The range of x values expressed as (start, end, number of points). Defaults to (-1, 1, 100).
+            y_range (tuple, optional): The range of y values expressed as (start, end, number of points). Defaults to (-1, 1, 100).
+            conicName (str, optional): The name of the conic. Defaults to 'Conic'.
+            color (str, optional): The color of the plot. Defaults to 'r'.
+            tol (_type_, optional): The tolerance for the plot
+            mask. Points with Z values less than tol will be plotted. Defaults to 1e-2.
+
+        Raises:
+            ValueError: If the current axis is not 3D
+        """
         if (self.dimention != 3):
             raise ValueError("The current axis is not 3D.")
 
@@ -111,7 +176,7 @@ class Plotter:
 
     def show(self):
         """
-        Show the plot.
+        Shows the plot.
         """
         plt.show()
 
