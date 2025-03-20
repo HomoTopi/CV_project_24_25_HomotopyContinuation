@@ -37,6 +37,15 @@ class Plotter:
         self.nPlotsy = nPlotsy
         self.dimention = 2
 
+    def getCurrentAxis(self) -> plt.Axes:
+        """
+        Get the current axis.
+
+        Returns:
+            matplotlib.axes._subplots.AxesSubplot: The current axis
+        """
+        return self.ax
+
     def newAxis(self, title="", axisSame=True):
         """
         Create a new 2D axis. The new axis will be set as the current axis for subsequent plots.
