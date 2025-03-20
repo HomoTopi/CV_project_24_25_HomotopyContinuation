@@ -19,26 +19,20 @@ class SceneGenerator:
         Returns:
             Img: The pair of conics and the true homography
         """
+        # Convert circles to conics
         C1_true = scene_description.circle1.to_conic()
         C2_true = scene_description.circle2.to_conic()
-        print('Original conics')
-        print(C1_true.M)
-        print(C2_true.M)
         plotter = Plotter()
+        # Plot the true conics
         plotter.plot_conics(Conics(C1_true, C2_true),"True Conics")
+        # Compute the homography
         H = self.compute_H(scene_description)
         H_inv = H.inv()
-        print('Homography inv')
-        print(H_inv)
-         # Apply homography to the true conics
-        C1 = Conic(np.transpose(H_inv) @ C1_true.M @ H_inv)
-        C2 = Conic(np.transpose(H_inv) @ C2_true.M @ H_inv)
-        C1.M = C1.M / C1.M[2,2]
-        C2.M = C2.M / C2.M[2,2]
+        # Apply homography to the true conics
+        C1 = Conic(H_inv.T @ C1_true.M @ H_inv)
+        C2 = Conic(H_inv.T @ C2_true.M @ H_inv)
         conics = Conics(C1, C2)
-        print('Transformed conics')
-        print(conics.C1.M)
-        print(conics.C2.M)
+        # Plot the transformed conics
         plotter.plot_conics(conics,"Transformed Conics")
         return Img(H,conics)
 
@@ -53,7 +47,9 @@ class SceneGenerator:
         Returns:
             Homography: The homography
         """
+        # Focal length
         f = scene_description.f
+        # Convert theta to radians
         theta = np.radians(scene_description.theta)
 
         # Intrinsic matrix (assuming natural camera and principal point at (0,0))
@@ -66,11 +62,10 @@ class SceneGenerator:
         r_p12 = np.array([0, np.cos(theta), np.sin(theta)])
         o_pi = np.array([0, 0, 1])
 
+        # Reference matrix
         referenceMatrix = np.array([r_pi1, r_p12, o_pi]).T
-         
-        H = K @ referenceMatrix
 
-        return Homography(H)
+        return Homography(K @ referenceMatrix)
 
 
 

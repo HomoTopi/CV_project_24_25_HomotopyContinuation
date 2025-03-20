@@ -29,5 +29,6 @@ def main():
     img = scene_generator.generate_scene(scene_description)
 
     print("Scene generated successfully!")
+
 if __name__ == "__main__":
     main()
