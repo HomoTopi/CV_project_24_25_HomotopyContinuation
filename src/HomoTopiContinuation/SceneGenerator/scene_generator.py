@@ -50,7 +50,7 @@ class SceneGenerator:
         """
         # Focal length
         f = scene_description.f
-        # Convert theta to radians
+        # Convert y_rotation from degrees to radians
         y_rotation = np.radians(scene_description.y_rotation)
 
         # Intrinsic matrix (assuming natural camera and principal point at (0,0))
@@ -79,7 +79,7 @@ class SceneGenerator:
         Returns:
             np.ndarray: The reference matrix
         """
-        # Convert theta to radians
+        # Convert y_rotation from degrees to radians
         y_rotation = np.radians(scene_description.y_rotation)
 
         # Reference frame
