@@ -123,7 +123,7 @@ class SceneDescription:
         circle2 (circle): Second circle
     """
 
-    def __init__(self, f: float, theta: float, circle1: Circle, circle2: Circle):
+    def __init__(self, f: float, y_rotation: float, offset: np.ndarray, circle1: Circle, circle2: Circle):
         """
         Initialize a SceneDescription object.
 
@@ -134,10 +134,15 @@ class SceneDescription:
             circle2 (Circle): Parameters of the second circle
 
         """
+        if f <= 0:
+            raise ValueError("Focal length must be positive")
+        if offset.shape != (3,):
+            raise ValueError("Offset must be a 3D vector")
         self.f = f
-        self.theta = theta
+        self.y_rotation = y_rotation
         self.circle1 = circle1
         self.circle2 = circle2
+        self.offset = offset
 
 
 class Homography:
