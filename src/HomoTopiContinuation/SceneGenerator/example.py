@@ -19,14 +19,13 @@ def main():
 
     # Create a SceneDescription object
     f = 1  # Focal length
-    theta = 30.0 # Rotation angle
-    scene_description = SceneDescription(f,theta,circle1,circle2)
+    y_rotation = 30.0 # Rotation angle
+    offset = np.array([0.0,0.0,1.0]) # Offset
 
-    # Create the scene generator
-    scene_generator = SceneGenerator()
+    scene_description = SceneDescription(f,y_rotation,offset,circle1,circle2)
 
     # Generate the scene
-    img = scene_generator.generate_scene(scene_description)
+    img = SceneGenerator.generate_scene(scene_description)
 
     print("Scene generated successfully!")
 
