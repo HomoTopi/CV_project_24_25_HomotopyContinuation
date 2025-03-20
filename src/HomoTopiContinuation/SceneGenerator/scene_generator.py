@@ -2,6 +2,7 @@ import numpy as np
 from HomoTopiContinuation.DataStructures.datastructures import SceneDescription, Conic, Conics, Circle, Homography, Img
 from HomoTopiContinuation.Plotter.plotter import Plotter
 
+
 class SceneGenerator:
     """
     Class for generating scenes.
@@ -24,7 +25,7 @@ class SceneGenerator:
         C2_true = scene_description.circle2.to_conic()
         plotter = Plotter()
         # Plot the true conics
-        plotter.plot_conics(Conics(C1_true, C2_true),"True Conics")
+        plotter.plot_conics(Conics(C1_true, C2_true), "True Conics")
         # Compute the homography
         H = SceneGenerator.compute_H(scene_description)
         H_inv = H.inv()
@@ -33,8 +34,8 @@ class SceneGenerator:
         C2 = Conic(H_inv.T @ C2_true.M @ H_inv)
         conics = Conics(C1, C2)
         # Plot the transformed conics
-        plotter.plot_conics(conics,"Transformed Conics")
-        return Img(H,conics)
+        plotter.plot_conics(conics, "Transformed Conics")
+        return Img(H, conics)
 
     @staticmethod
     def compute_H(scene_description: SceneDescription) -> Homography:
@@ -54,9 +55,9 @@ class SceneGenerator:
 
         # Intrinsic matrix (assuming natural camera and principal point at (0,0))
         K = np.array([[f, 0, 0],
-                    [0, f, 0],
-                    [0, 0, 1]])
-        
+                      [0, f, 0],
+                      [0, 0, 1]])
+
         # Reference frame
         r_pi1 = np.array([1, 0, 0])
         r_p12 = np.array([0, np.cos(y_rotation), np.sin(y_rotation)])
@@ -66,7 +67,7 @@ class SceneGenerator:
         referenceMatrix = np.array([r_pi1, r_p12, o_pi]).T
 
         return Homography(K @ referenceMatrix)
-    
+
     @staticmethod
     def compute_reference_matrix(scene_description: SceneDescription) -> np.ndarray:
         """
@@ -79,7 +80,7 @@ class SceneGenerator:
             np.ndarray: The reference matrix
         """
         # Convert theta to radians
-        y_rotation = np.radians(scene_description.theta)
+        y_rotation = np.radians(scene_description.y_rotation)
 
         # Reference frame
         r_pi1 = np.array([1, 0, 0])
@@ -87,6 +88,3 @@ class SceneGenerator:
         o_pi = scene_description.offset
 
         return np.array([r_pi1, r_p12, o_pi]).T
-
-
-
