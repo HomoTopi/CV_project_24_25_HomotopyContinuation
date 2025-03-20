@@ -4,7 +4,23 @@ from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
 
 class CameraPlotter:
+    """
+    A class for plotting cameras in 3D.
+    """
+
     def __init__(self, center=np.array([0.0, 0.0, 0.0]), yaw=0, pitch=0, roll=0, size=1.0, color='blue', bodyRatio=0.5):
+        """
+        Initialize a CameraPlotter object.
+
+        Args:
+            center (np.ndarray, optional): The center of the camera. Defaults to np.array([0.0, 0.0, 0.0]).
+            yaw (int, optional): The yaw angle of the camera in degrees. Defaults to 0.
+            pitch (int, optional): The pitch angle of the camera in degrees. Defaults to 0.
+            roll (int, optional): The roll angle of the camera in degrees. Defaults to 0.
+            size (float, optional): The size of the camera. It is the biggest dimention of the camera body. Defaults to 1.0.
+            color (str, optional): The color of the camera plot. Defaults to 'blue'.
+            bodyRatio (float, optional): The ratio between the body width and the body height. Defaults to 0.5.
+        """
         self.center = center
         self.yaw = yaw
         self.pitch = pitch
@@ -13,7 +29,18 @@ class CameraPlotter:
         self.color = color
         self.bodyRatio = bodyRatio
 
-    def rotationMatrix(self, yaw, pitch, roll):
+    def rotationMatrix(self, yaw: int, pitch: int, roll: int) -> np.ndarray:
+        """
+        Compute the rotation matrix from yaw, pitch, and roll angles.
+
+        Args:
+            yaw (_type_): The yaw angle in degrees
+            pitch (_type_): The pitch angle in degrees
+            roll (_type_): The roll angle in degrees
+
+        Returns:
+            np.ndarray: The rotation matrix
+        """
         yaw, pitch, roll = np.radians([yaw, pitch, roll])
 
         R_yaw = np.array([
@@ -35,6 +62,12 @@ class CameraPlotter:
         return R_yaw @ R_pitch @ R_roll
 
     def plotCube(self, ax: plt.Axes):
+        """
+        Plot a cube.
+
+        Args:
+            ax (plt.Axes): The axis to plot the cube on
+        """
         halfSize = self.size / 2
         vertices = np.array([
             [-halfSize*self.bodyRatio, -halfSize*self.bodyRatio, -halfSize],
@@ -67,6 +100,14 @@ class CameraPlotter:
                 [faceVertices], facecolors=self.color, linewidths=1, edgecolors='k', alpha=0.5))
 
     def plot_pyramid(self, ax: plt.Axes, base_size=1.0, height=1.0):
+        """
+        Plot a pyramid.
+
+        Args:
+            ax (plt.Axes): The axis to plot the pyramid on
+            base_size (float, optional): The size of the base of the pyramid. Defaults to 1.0.
+            height (float, optional): The height of the pyramid. Defaults to 1.0.
+        """
         # Define pyramid vertices (apex at origin)
         half_base = base_size / 2
         vertices = np.array([
@@ -105,5 +146,11 @@ class CameraPlotter:
             [base], alpha=0.5, color=self.color, linewidths=1, edgecolors='k'))
 
     def plotCamera(self, ax: plt.Axes):
+        """
+        Plot the camera.
+
+        Args:
+            ax (plt.Axes): The axis to plot the camera on
+        """
         self.plotCube(ax)
         self.plot_pyramid(ax, base_size=self.size, height=self.size)
