@@ -10,6 +10,11 @@ class Plotter:
     """
     A class for plotting both 2D and 3D plots.
     There are methods to plot conics and cameras.
+
+    To use the plotter, create a Plotter object specifying the number of plots in x and y directions and the figure size.
+    For every plot first create a new axis using newAxis or new3DAxis methods.
+    The newly created axis will be set as the current axis for subsequent plots.
+    Then use the plotConic2D, plotConic3D, and plotCamera methods to plot conics and cameras.
     """
 
     def __init__(self, nPlotsx=1, nPlotsy=1, figsize=(10, 10), title="My plot"):
@@ -182,21 +187,27 @@ class Plotter:
 
 
 if __name__ == "__main__":
+    # Initialize the plotter
     plotter = Plotter(title="Conics", nPlotsx=2, nPlotsy=1)
+
+    # Create a conic
     conic = Conic(np.array([
         [1, 0, 0],
         [0, 1, 0],
         [0, 0, -1]
     ]))
+
+    # First plot (on the left)
     plotter.newAxis(title="Conic")
     plotter.plotConic2D(conic)
 
+    # Second plot (on the right)
     c = Circle(np.array([0, 0]), 1)
     conic = c.to_conic()
-
     sd = sg.SceneDescription(1, 30, np.array([0, 0, 1]), c, c)
-
     plotter.new3DAxis(title="Conic")
     plotter.plotCamera()
     plotter.plotConic3D(conic, sd)
+
+    # Show the plot
     plotter.show()
