@@ -1,4 +1,4 @@
-from src.HomoTopiContinuation.DataStructures.datastructures import Conics, Conic
+from HomoTopiContinuation.DataStructures.datastructures import Conics, Conic
 import numpy as np
 import pytest
 

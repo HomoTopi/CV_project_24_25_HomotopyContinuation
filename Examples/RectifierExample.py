@@ -1,10 +1,3 @@
-try:
-    import os
-    import sys
-    sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-except NameError:
-    pass
-
 import numpy as np
 import logging
 from HomoTopiContinuation.DataStructures.datastructures import Conic, Conics
