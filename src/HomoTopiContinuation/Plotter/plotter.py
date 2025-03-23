@@ -188,6 +188,77 @@ class Plotter:
         self.ax.scatter(points[0], points[1], points[2],
                         label=conicName, color=color)
 
+    def plotCircle2D(self, circle: Circle, thetaResolution=100, color='r', name='Circle'):
+        """
+        Plot a 2D circle.
+
+        Args:
+            circle (Circle): The circle to plot
+            thetaResolution (int): The number of points to plot the circle
+            color (str): The color of the circle
+            name (str): The name of the circle
+        """
+        if (self.dimention != 2):
+            raise ValueError("The current axis is not 2D.")
+        theta = np.linspace(0, 2 * np.pi, thetaResolution)
+        x = circle.center[0] + circle.radius * np.cos(theta)
+        y = circle.center[1] + circle.radius * np.sin(theta)
+
+        x = np.append(x, x[0])
+        y = np.append(y, y[0])
+
+        self.ax.plot(x, y, color=color, label=name)
+
+    def plotCircle3D(self, circle: Circle, sceneDescription: sg.SceneDescription, thetaResolution=100, color='r', name='Circle'):
+        """
+        Plot a 3D circle.
+
+        Args:
+            circle (Circle): The circle to plot
+            sceneDescription (sg.SceneDescription): The description of the scene
+            thetaResolution (int): The number of points to plot the circle
+            color (str): The color of the circle
+            name (str): The name of the circle
+        """
+        if (self.dimention != 3):
+            raise ValueError("The current axis is not 3D.")
+        theta = np.linspace(0, 2 * np.pi, thetaResolution)
+        x = circle.center[0] + circle.radius * np.cos(theta)
+        y = circle.center[1] + circle.radius * np.sin(theta)
+
+        referenceMatrix = sg.SceneGenerator.compute_reference_matrix(
+            sceneDescription)
+
+        points = np.array([x, y, np.ones_like(x)])
+        points = referenceMatrix @ points
+
+        self.ax.plot(points[0], points[1], points[2], color=color, label=name)
+
+    def drawReferenceFrame(self, sceneDescription: sg.SceneDescription, size=1, colorX='r', colorY='g'):
+        """
+        Draw the reference frame of the scene described by sceneDescription. It will draw the X and Y axis of the reference plane.
+
+        Args:
+            sceneDescription (sg.SceneDescription): The description of the scene
+            size (float): The size of the reference frame
+            colorX (str): The color of the X axis
+            colorY (str): The color of the Y axis
+        """
+        if (self.dimention != 3):
+            raise ValueError("The current axis is not 3D.")
+        referenceMatrix = sg.SceneGenerator.compute_reference_matrix(
+            sceneDescription)
+
+        i_hat = referenceMatrix[:, 0]
+        j_hat = referenceMatrix[:, 1]
+        offset = referenceMatrix[:, 2]
+
+        self.ax.quiver(offset[0], offset[1], offset[2], i_hat[0], i_hat[1], i_hat[2],
+                       color=colorX, label='X', length=size, arrow_length_ratio=0.1)
+
+        self.ax.quiver(offset[0], offset[1], offset[2], j_hat[0], j_hat[1], j_hat[2],
+                       color=colorY, label='Y', length=size, arrow_length_ratio=0.1)
+
     def show(self):
         """
         Shows the plot.
@@ -199,24 +270,19 @@ if __name__ == "__main__":
     # Initialize the plotter
     plotter = Plotter(title="Conics", nPlotsx=2, nPlotsy=1)
 
-    # Create a conic
-    conic = Conic(np.array([
-        [1, 0, 0],
-        [0, 1, 0],
-        [0, 0, -1]
-    ]))
+    # Define the circle
+    c = Circle(np.array([0, 0]), 1)
 
     # First plot (on the left)
-    plotter.newAxis(title="Conic")
-    plotter.plotConic2D(conic)
+    plotter.newAxis(title="Circle 2D")
+    plotter.plotCircle2D(c)
 
     # Second plot (on the right)
-    c = Circle(np.array([0, 0]), 1)
-    conic = c.to_conic()
     sd = sg.SceneDescription(1, 30, np.array([0, 0, 1]), c, c)
-    plotter.new3DAxis(title="Conic")
+    plotter.new3DAxis(title="Circle 3D")
     plotter.plotCamera()
-    plotter.plotConic3D(conic, sd)
+    plotter.drawReferenceFrame(sd)
+    plotter.plotCircle3D(c, sd)
 
     # Show the plot
     plotter.show()
