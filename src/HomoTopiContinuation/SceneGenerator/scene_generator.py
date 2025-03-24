@@ -1,6 +1,6 @@
 import numpy as np
 from HomoTopiContinuation.DataStructures.datastructures import SceneDescription, Conic, Conics, Circle, Homography, Img
-import HomoTopiContinuation.Plotter.plotter as Plotter
+import HomoTopiContinuation.Plotter.Plotter as Plotter
 
 
 class SceneGenerator:
