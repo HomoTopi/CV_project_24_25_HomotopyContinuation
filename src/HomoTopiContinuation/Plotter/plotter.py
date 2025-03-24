@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from HomoTopiContinuation.DataStructures.datastructures import Conics, Conic, Circle, SceneDescription
+from HomoTopiContinuation.DataStructures.datastructures import Conics, Conic, Circle, SceneDescription, Img
 from HomoTopiContinuation.Plotter.CameraPlotter import CameraPlotter
 import HomoTopiContinuation.SceneGenerator.scene_generator as sg
 import seaborn as sns
@@ -93,7 +93,7 @@ class Plotter:
         self.plotNumber += 1
         if axisSame:
             # Set the axis to have the same scale
-            self.ax.set_aspect('equal', adjustable='datalim')
+            self.ax.set_box_aspect([1, 1, 1])
 
         self.ax.set_xlabel('X')
         self.ax.set_ylabel('Y')
@@ -268,21 +268,33 @@ class Plotter:
 
 if __name__ == "__main__":
     # Initialize the plotter
-    plotter = Plotter(title="Conics", nPlotsx=2, nPlotsy=1)
+    plotter = Plotter(title="Conics", nPlotsx=3, nPlotsy=1)
 
     # Define the circle
-    c = Circle(np.array([0, 0]), 1)
+    c1 = Circle(np.array([0, 0]), 1)
+    c2 = Circle(np.array([0.5, 0]), 1)
 
     # First plot (on the left)
-    plotter.newAxis(title="Circle 2D")
-    plotter.plotCircle2D(c)
+    plotter.newAxis(title="Rectified Image", axisSame=True)
+    plotter.plotCircle2D(c1, name="Circle 1", color='b')
+    plotter.plotCircle2D(c2, name="Circle 2", color='g')
 
     # Second plot (on the right)
-    sd = sg.SceneDescription(1, 30, np.array([0, 0, 1]), c, c)
-    plotter.new3DAxis(title="Circle 3D")
+    sd = sg.SceneDescription(1, 30, np.array([0, 0, 2]), c1, c2)
+    plotter.new3DAxis(title="3D Scene", axisSame=True)
     plotter.plotCamera()
     plotter.drawReferenceFrame(sd)
-    plotter.plotCircle3D(c, sd)
+    plotter.plotCircle3D(c1, sd, color='b', name="Circle 1")
+    plotter.plotCircle3D(c2, sd, color='g', name="Circle 2")
 
+    # Generate Image
+    image = sg.SceneGenerator.generate_scene(sd)
+
+    # Plot the Image
+    plotter.newAxis(title="Original Image", axisSame=True)
+    plotter.plotConic2D(image.C_img.C1, conicName="Conic 1", color='b')
+    plotter.plotConic2D(image.C_img.C2, conicName="Conic 2", color='g')
+
+    image
     # Show the plot
     plotter.show()
