@@ -12,13 +12,14 @@ class SceneGenerator:
     @staticmethod
     def generate_scene(scene_description: SceneDescription) -> Img:
         """
-        Generate a scene from the given description.
+        Construct the matrices of the two circles and the homography from the scene description.
+        Apply the homography to the true conics (circles) to get the warped conics.
 
         Args:
             scene_description (SceneDescription): The description of the scene
 
         Returns:
-            Img: The pair of conics and the true homography
+            Img: The pair of warped conics and the true homography
         """
         # Convert circles to conics
         C1_true = scene_description.circle1.to_conic()
@@ -36,6 +37,9 @@ class SceneGenerator:
     def compute_H(scene_description: SceneDescription) -> Homography:
         """
         Compute the homography matrix from the scene description using plane-to-image homography.
+        The homography is computed multiplying the intrinsic calibration matrix and the reference matrix.
+        The calibration matrix is assumed to be for a natural camera with the principal point at (0,0).
+        The reference matrix represents in the world frame the x-axis, the y-axis with its rotation and the offset of the camera with respect to the plane.
 
         Args:
             scene_description (SceneDescription): The description of the scene
@@ -67,6 +71,7 @@ class SceneGenerator:
     def compute_reference_matrix(scene_description: SceneDescription) -> np.ndarray:
         """
         Compute the reference matrix from the scene description.
+        The reference matrix represents in the world frame the x-axis, the y-axis with its rotation and the offset of the camera with respect to the plane.
 
         Args:
             scene_description (SceneDescription): The description of the scene
