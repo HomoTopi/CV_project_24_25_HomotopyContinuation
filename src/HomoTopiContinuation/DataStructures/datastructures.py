@@ -54,6 +54,18 @@ class Conic:
         """
         return self.M
 
+    def applyHomography(self, H: 'Homography') -> 'Conic':
+        """
+        Apply a homography to the circle.
+
+        Args:
+            H (Homography): The homography
+
+        Returns:
+            Conic: The conic after applying the homography
+        """
+        return Conic(H.inv().T @ self.M @ H.inv())
+
 
 class Conics:
     """
@@ -84,6 +96,7 @@ class Conics:
         """
         return self.C1, self.C2
 
+
 class Circle:
     def __init__(self, center: np.ndarray, radius: float):
         """
@@ -97,10 +110,10 @@ class Circle:
         """
         if radius < 0:
             raise ValueError("Circle radius must be positive")
-        
+
         self.center = center
         self.radius = radius
-    
+
     def to_conic(self):
         """
         Convert the circle to a conic.
@@ -108,9 +121,11 @@ class Circle:
         conic = np.array([
             [1, 0, -self.center[0]],
             [0, 1, -self.center[1]],
-            [-self.center[0], -self.center[1], self.center[0]**2 + self.center[1]**2 - self.radius**2]
+            [-self.center[0], -self.center[1], self.center[0]
+                ** 2 + self.center[1]**2 - self.radius**2]
         ])
         return Conic(conic)
+
 
 class SceneDescription:
     """
