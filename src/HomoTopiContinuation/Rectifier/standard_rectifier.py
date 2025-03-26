@@ -27,7 +27,7 @@ class StandardRectifier(Rectifier):
         """
         logging.info("Rectifying using SymPy")
 
-        logging.debug(f"Conics: {C_img}")
+        logging.info(f"Conics: {C_img}")
 
         # Extract algebraic parameters from conics
         a1, b1, c1, d1, e1, f1 = C_img.C1.to_algebraic_form()
@@ -47,31 +47,36 @@ class StandardRectifier(Rectifier):
 
         # Solve the system of equations
         solutions = sp.solve((eq1, eq2), (x, y))
-        logging.debug(f"Solutions: {solutions}")
+        logging.info(f"Solutions: {solutions}")
 
         # Extract intersection points
         II = np.array([float(solutions[0][0]), float(solutions[0][1]), 1.0])
         JJ = np.array([float(solutions[1][0]), float(solutions[1][1]), 1.0])
-
-        logging.debug(f"II: {II}")
-        logging.debug(f"JJ: {JJ}")
+        
+        logging.info(f"II: {II}")
+        logging.info(f"JJ: {JJ}")
 
         # Compute the dual conic of the circular points
-        imDCCP = np.outer(II, JJ) + np.outer(JJ, II)
-
-        # Normalize
+        imDCCP = np.outer(II, JJ.T) + np.outer(JJ, II.T)
         imDCCP = imDCCP / la.norm(imDCCP)
-        logging.debug(f"imDCCP: {imDCCP}")
+        
+        eigs = np.linalg.eigvals(imDCCP)
+        
+        if np.any(eigs < 0):
+            logging.error("imDCCP is not positive definite")
+            raise ValueError("imDCCP is not positive definite! No homography can be computed.")
+        
+        logging.info(f"imDCCP\n: {imDCCP}")
 
         # Singular value decomposition
         U, S, Vt = la.svd(imDCCP)
-        logging.debug(f"U: {U}")
-        logging.debug(f"S: {S}")
-        logging.debug(f"V: {Vt}")
+        logging.info(f"U\n: {U}")
+        logging.info(f"S\n: {S}")
+        logging.info(f"V\n: {Vt}")
 
         # Compute the homography
         H = np.diag(1.0 / np.sqrt(S)) @ U.T
 
-        logging.debug(f"H: {H}")
+        logging.info(f"H: {H}")
 
         return Homography(H)
