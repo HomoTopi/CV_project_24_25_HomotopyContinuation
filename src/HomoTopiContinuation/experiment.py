@@ -32,7 +32,7 @@ def main():
     C1_reconstructed = img.C_img.C1.applyHomography(H_reconstructed)
     C2_reconstructed = img.C_img.C2.applyHomography(H_reconstructed)
 
-    plotter = Plotter.Plotter(3, 1)
+    plotter = Plotter.Plotter(3, 1, title="Experiment")
 
     plotter.plotScene(sceneDescription, img)
     plotter.plotConic2D(
