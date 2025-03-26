@@ -75,7 +75,7 @@ class StandardRectifier(Rectifier):
         logging.info(f"V\n: {Vt}")
 
         # Compute the homography
-        H = np.diag(1.0 / np.sqrt(S)) @ U.T
+        H = np.diag(1.0 / np.sqrt([S[0], S[1], 1.0])) @ U.T
 
         logging.info(f"H: {H}")
 
