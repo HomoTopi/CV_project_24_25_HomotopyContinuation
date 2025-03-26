@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from HomoTopiContinuation.DataStructures.datastructures import Conics, Conic, Circle, SceneDescription
+from HomoTopiContinuation.DataStructures.datastructures import Conics, Conic, Circle, SceneDescription, Img
 from HomoTopiContinuation.Plotter.CameraPlotter import CameraPlotter
 import HomoTopiContinuation.SceneGenerator.scene_generator as sg
 import seaborn as sns
@@ -46,13 +46,14 @@ class Plotter:
         """
         return self.ax
 
-    def newAxis(self, title="", axisSame=True):
+    def newAxis(self, title="", axisSame=True, legend=True):
         """
         Create a new 2D axis. The new axis will be set as the current axis for subsequent plots.
 
         Args:
             title (str): Title of the axis
             axisSame (bool): If True, the axis will have the same scale
+            legend (bool): If True, the legend will be shown
 
         Raises:
             ValueError: If the maximum number of plots is reached
@@ -71,6 +72,12 @@ class Plotter:
         if axisSame:
             self.ax.axis('equal')
         self.dimention = 2
+
+    def drawLegend(self):
+        """
+        Draw the legend.
+        """
+        self.ax.legend()
 
     def new3DAxis(self, title="", axisSame=True):
         """
@@ -93,7 +100,7 @@ class Plotter:
         self.plotNumber += 1
         if axisSame:
             # Set the axis to have the same scale
-            self.ax.set_aspect('equal', adjustable='datalim')
+            self.ax.set_box_aspect([1, 1, 1])
 
         self.ax.set_xlabel('X')
         self.ax.set_ylabel('Y')
@@ -126,7 +133,8 @@ class Plotter:
 
         Z = a * X**2 + b * X * Y + c * Y**2 + d * X + e * Y + f
 
-        self.ax.contour(X, Y, Z, levels=[0], colors=color, label=conicName)
+        cs = self.ax.contour(X, Y, Z, levels=[0], colors=color)
+        plt.clabel(cs, inline=True, fontsize=10, fmt=conicName)
 
     def plotCamera(self, center=np.array([0.0, 0.0, 0.0]), yaw=0, pitch=0, roll=0, size=.2, color='blue', bodyRatio=0.5):
         """
@@ -259,6 +267,80 @@ class Plotter:
         self.ax.quiver(offset[0], offset[1], offset[2], j_hat[0], j_hat[1], j_hat[2],
                        color=colorY, label='Y', length=size, arrow_length_ratio=0.1)
 
+    def plotSceneNewPlotter(sceneDescription: sg.SceneDescription, img: Img, colorC1='r', colorC2='b', name='Scene') -> 'Plotter':
+        """
+        Plot a scene with the original image, the rectified image, and the 3D scene.
+        This will produce three plots:
+        - A rectified plot with the circles
+        - A 3D plot with the camera and the circles
+        - A plot of the rendered image with the conics
+
+        This method creates a new plotter object and plots the scene.
+
+        Args:
+            sceneDescription (sg.SceneDescription): The description of the scene
+            img (Img): The image of the scene
+            colorC1 (str, optional): The color for the plotting of the first conic. Defaults to 'r'.
+            colorC2 (str, optional): The color for the plotting of the second conic. Defaults to 'b'.
+            name (str, optional): The name of the scene. Defaults to 'Scene'.
+
+        Returns:
+            Plotter: The Plotter object
+        """
+        plotter = Plotter(nPlotsx=3, nPlotsy=1, figsize=(10, 10), title=name)
+
+        plotter.plotScene(sceneDescription, img, colorC1, colorC2, name)
+
+        plotter.show()
+
+        return plotter
+
+    def plotScene(self, sceneDescription: sg.SceneDescription, img: Img, colorC1='r', colorC2='b', name='Scene'):
+        """
+        Plot a scene with the original image, the rectified image, and the 3D scene.
+        This will produce three plots:
+        - A rectified plot with the circles
+        - A 3D plot with the camera and the circles
+        - A plot of the rendered image with the conics
+
+        This requires at least 3 plots remaining.
+
+        Args:
+            sceneDescription (sg.SceneDescription): The description of the scene
+            img (Img): The image of the scene
+            colorC1 (str, optional): The color for the plotting of the first conic. Defaults to 'r'.
+            colorC2 (str, optional): The color for the plotting of the second conic. Defaults to 'b'.
+            name (str, optional): The name of the scene. Defaults to 'Scene'.
+        """
+
+        if (self.plotNumber + 2 > self.maxPlots):
+            raise ValueError(
+                "Maximum number of plots reached. Please create a new figure.")
+
+        # First plot (on the left)
+        self.newAxis(title="Rectified Image", axisSame=True)
+        self.plotCircle2D(sceneDescription.circle1,
+                          name="Circle 1", color=colorC1)
+        self.plotCircle2D(sceneDescription.circle2,
+                          name="Circle 2", color=colorC2)
+        self.drawLegend()
+
+        # Second plot (in the middle)
+        self.new3DAxis(title="3D Scene", axisSame=True)
+        self.plotCamera()
+        self.drawReferenceFrame(sceneDescription)
+        self.plotCircle3D(sceneDescription.circle1,
+                          sceneDescription, color=colorC1, name="Circle 1")
+        self.plotCircle3D(sceneDescription.circle2,
+                          sceneDescription, color=colorC2, name="Circle 2")
+        self.drawLegend()
+
+        # Third plot (on the right)
+        self.newAxis(title="Original Image", axisSame=True)
+        self.plotConic2D(img.C_img.C1, conicName="Conic 1", color=colorC1)
+        self.plotConic2D(img.C_img.C2, conicName="Conic 2", color=colorC2)
+        self.drawLegend()
+
     def show(self):
         """
         Shows the plot.
@@ -267,22 +349,15 @@ class Plotter:
 
 
 if __name__ == "__main__":
-    # Initialize the plotter
-    plotter = Plotter(title="Conics", nPlotsx=2, nPlotsy=1)
-
     # Define the circle
-    c = Circle(np.array([0, 0]), 1)
-
-    # First plot (on the left)
-    plotter.newAxis(title="Circle 2D")
-    plotter.plotCircle2D(c)
+    c1 = Circle(np.array([0, 0]), 1)
+    c2 = Circle(np.array([0.5, 0]), 1)
 
     # Second plot (on the right)
-    sd = sg.SceneDescription(1, 30, np.array([0, 0, 1]), c, c)
-    plotter.new3DAxis(title="Circle 3D")
-    plotter.plotCamera()
-    plotter.drawReferenceFrame(sd)
-    plotter.plotCircle3D(c, sd)
+    sd = sg.SceneDescription(1, 30, np.array([0, 0, 2]), c1, c2)
 
-    # Show the plot
-    plotter.show()
+    # Generate Image
+    image = sg.SceneGenerator.generate_scene(sd)
+
+    Plotter.plotSceneNewPlotter(
+        sd, image, colorC1='b', colorC2='g', name='Scene')
