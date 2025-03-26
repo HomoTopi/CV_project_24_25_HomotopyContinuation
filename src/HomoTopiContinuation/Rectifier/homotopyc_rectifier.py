@@ -27,17 +27,7 @@ class HomotopyContinuationRectifier(Rectifier):
         
         # call the __init__ of the parent class
         super().__init__()
-
-    def test_julia(self):
-        # get script to eval from file
-        path = os.path.join(os.path.dirname(__file__), 'Julia/test.jl')
-        script = open(path, "r").read()
-        jl.my_vec = np.array([1, 2, 3])
-        jl.seval(script)
-                
         
-        
-    
     def rectify(self, C_img: Conics) -> Homography:
         """
         Rectify a pair of conics using SymPy.
@@ -64,15 +54,41 @@ class HomotopyContinuationRectifier(Rectifier):
         jl.a2, jl.b2, jl.c2, jl.d2, jl.e2, jl.f2 = np.array([a2, b2, c2, d2, e2, f2])
         
         jl.seval(script)
-        
-        result = jl.result
-        logging.info(f"Result: {result}")
-        
+        ## TODO: check if casting is the same as the one used in SymPy
+        solutions = np.array([ np.complex128(sol) for sol in jl.sol])
+        real_solutions = np.array([ np.float64(sol) for sol in jl.real_sol])
+        logging.debug(f"Result: {solutions}")
+        logging.info(f"Real solutions: {real_solutions}")
         ## TODO: extract the intersection points from the result
         ## TODO: compute the rectification homography both by svd and by a fully homotopy continuation approach
-    
-        return 
+        
+        assert len(real_solutions) == 2, "No intersection points found"
+        
+        II = np.array([real_solutions[0][0], real_solutions[0][1], 1.0])
+        JJ = np.array([real_solutions[1][0], real_solutions[1][1], 1.0])
+        logging.info(f"II: {II}")
+        logging.info(f"JJ: {JJ}")
+        
+        # Compute the dual conic of the circular points
+        imDCCP = np.outer(II, JJ) + np.outer(JJ, II)
 
+        # Normalize
+        imDCCP = imDCCP / la.norm(imDCCP)
+        logging.debug(f"imDCCP: {imDCCP}")
+
+        # Singular value decomposition
+        U, S, Vt = la.svd(imDCCP)
+        logging.debug(f"U: {U}")
+        logging.debug(f"S: {S}")
+        logging.debug(f"V: {Vt}")
+
+        # Compute the homography
+        H = np.diag(1.0 / np.sqrt(S)) @ U.T
+
+        logging.debug(f"H: {H}")
+
+        return Homography(H)
+        
     def _get_script(self, filename: str) -> str:
         path = os.path.join(os.path.dirname(__file__), filename)
         script = open(path, "r").read()

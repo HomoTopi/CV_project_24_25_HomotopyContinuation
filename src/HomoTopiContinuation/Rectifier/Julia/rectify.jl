@@ -8,5 +8,6 @@ f_2 = a2*x^2 + b2*x*y + c2*y^2 + d2*x + e2*y + f2
 
 
 F = System([f_1, f_2])
-
-result = solutions(solve(F, [x, y]))
+res = solve(F, [x, y])
+sol = solutions(res)
+real_sol = real_solutions(res)
