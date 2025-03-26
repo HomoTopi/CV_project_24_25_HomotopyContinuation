@@ -46,13 +46,14 @@ class Plotter:
         """
         return self.ax
 
-    def newAxis(self, title="", axisSame=True):
+    def newAxis(self, title="", axisSame=True, legend=True):
         """
         Create a new 2D axis. The new axis will be set as the current axis for subsequent plots.
 
         Args:
             title (str): Title of the axis
             axisSame (bool): If True, the axis will have the same scale
+            legend (bool): If True, the legend will be shown
 
         Raises:
             ValueError: If the maximum number of plots is reached
@@ -71,6 +72,12 @@ class Plotter:
         if axisSame:
             self.ax.axis('equal')
         self.dimention = 2
+
+    def drawLegend(self):
+        """
+        Draw the legend.
+        """
+        self.ax.legend()
 
     def new3DAxis(self, title="", axisSame=True):
         """
@@ -126,7 +133,8 @@ class Plotter:
 
         Z = a * X**2 + b * X * Y + c * Y**2 + d * X + e * Y + f
 
-        self.ax.contour(X, Y, Z, levels=[0], colors=color, label=conicName)
+        cs = self.ax.contour(X, Y, Z, levels=[0], colors=color)
+        plt.clabel(cs, inline=True, fontsize=10, fmt=conicName)
 
     def plotCamera(self, center=np.array([0.0, 0.0, 0.0]), yaw=0, pitch=0, roll=0, size=.2, color='blue', bodyRatio=0.5):
         """
@@ -315,6 +323,7 @@ class Plotter:
                           name="Circle 1", color=colorC1)
         self.plotCircle2D(sceneDescription.circle2,
                           name="Circle 2", color=colorC2)
+        self.drawLegend()
 
         # Second plot (in the middle)
         self.new3DAxis(title="3D Scene", axisSame=True)
@@ -324,11 +333,13 @@ class Plotter:
                           sceneDescription, color=colorC1, name="Circle 1")
         self.plotCircle3D(sceneDescription.circle2,
                           sceneDescription, color=colorC2, name="Circle 2")
+        self.drawLegend()
 
         # Third plot (on the right)
         self.newAxis(title="Original Image", axisSame=True)
         self.plotConic2D(img.C_img.C1, conicName="Conic 1", color=colorC1)
         self.plotConic2D(img.C_img.C2, conicName="Conic 2", color=colorC2)
+        self.drawLegend()
 
     def show(self):
         """
