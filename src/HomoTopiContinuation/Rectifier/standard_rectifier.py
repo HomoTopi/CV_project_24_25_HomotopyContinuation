@@ -1,7 +1,8 @@
 import numpy as np
-import sympy as sp
 from numpy import linalg as la
 import logging
+from sympy import symbols, Eq, solve
+
 
 from HomoTopiContinuation.DataStructures.datastructures import Conics, Homography
 from .rectifier import Rectifier
@@ -25,36 +26,54 @@ class StandardRectifier(Rectifier):
         Returns:
             Homography: The rectification homography
         """
-        logging.info("Rectifying using SymPy")
+        self.logger.info("Rectifying using scipy")
 
-        logging.info(f"Conics: {C_img}")
-
+        self.logger.info(f"Conics: {C_img}")
+        
+    
         # Extract algebraic parameters from conics
         a1, b1, c1, d1, e1, f1 = C_img.C1.to_algebraic_form()
         a2, b2, c2, d2, e2, f2 = C_img.C2.to_algebraic_form()
+        a3, b3, c3, d3, e3, f3 = a2, b2, c2, d2, e2, f2*0.5
+        
+        self.logger.info(f"a\n{C_img.C1.M}")
+        self.logger.info(f"b\n{C_img.C2.M}")
 
-        logging.info(
+        self.logger.info(
             f"Equation 1: {a1}*x^2 + {b1}*x*y + {c1}*y^2 + {d1}*x + {e1}*y + {f1}")
-        logging.info(
+        self.logger.info(
             f"Equation 2: {a2}*x^2 + {b2}*x*y + {c2}*y^2 + {d2}*x + {e2}*y + {f2}")
+        self.logger.info(
+            f"Equation 3: {a3}*x^2 + {b3}*x*y + {c3}*y^2 + {d3}*x + {e3}*y + {f3}")
 
-        # Define symbolic variables
-        x, y = sp.symbols('x y')
-
-        # Define equations
-        eq1 = sp.Eq(a1*x**2 + b1*x*y + c1*y**2 + d1*x + e1*y + f1, 0)
-        eq2 = sp.Eq(a2*x**2 + b2*x*y + c2*y**2 + d2*x + e2*y + f2, 0)
+        x, y, w = symbols('x y w')
+        eq = [Eq(a1*x**2 + b1*x*y + c1*y**2 + d1*x*w + e1*y*w + f1*w**2, 0),
+              Eq(a2*x**2 + b2*x*y + c2*y**2 + d2*x*w + e2*y*w + f2*w**2, 0),
+              Eq(a3*x**2 + b3*x*y + c3*y**2 + d3*x*w + e3*y*w + f3*w**2, 0)]
 
         # Solve the system of equations
-        solutions = sp.solve((eq1, eq2), (x, y))
-        logging.info(f"Solutions: {solutions}")
+        #solutions = fsolve(eq, [0, 0, 0])
+        solutions = solve(eq, (x, y, w))
+        #s = complex(solutions[0], solutions[1])
+        self.logger.info(f"Solutions: {solutions}")
+        
+        sols = []
+        for expr_tuple in solutions:
+            t = []
+            for expr in expr_tuple:
+                t.append(complex(expr.subs({x: 1, y: 1, w: 1})))
+            sols.append(t)
+        
+        sols = np.array(sols)
+        self.logger.info(f"Solutions: {sols}")
+
 
         # Extract intersection points
-        II = np.array([float(solutions[0][0]), float(solutions[0][1]), 1.0])
-        JJ = np.array([float(solutions[1][0]), float(solutions[1][1]), 1.0])
+        II = sols[0]
+        JJ = sols[1]
         
-        logging.info(f"II: {II}")
-        logging.info(f"JJ: {JJ}")
+        self.logger.info(f"II: {II}")
+        self.logger.info(f"JJ: {JJ}")
 
         # Compute the dual conic of the circular points
         imDCCP = np.outer(II, JJ.T) + np.outer(JJ, II.T)
@@ -63,20 +82,20 @@ class StandardRectifier(Rectifier):
         eigs = np.linalg.eigvals(imDCCP)
         
         if np.any(eigs < 0):
-            logging.error("imDCCP is not positive definite")
+            self.logger.error("imDCCP is not positive definite")
             raise ValueError("imDCCP is not positive definite! No homography can be computed.")
         
-        logging.info(f"imDCCP\n: {imDCCP}")
+        self.logger.info(f"imDCCP\n: {imDCCP}")
 
         # Singular value decomposition
         U, S, Vt = la.svd(imDCCP)
-        logging.info(f"U\n: {U}")
-        logging.info(f"S\n: {S}")
-        logging.info(f"V\n: {Vt}")
+        self.logger.info(f"U\n: {U}")
+        self.logger.info(f"S\n: {S}")
+        self.logger.info(f"V\n: {Vt}")
 
         # Compute the homography
         H = np.diag(1.0 / np.sqrt([S[0], S[1], 1.0])) @ U.T
 
-        logging.info(f"H: {H}")
+        self.logger.info(f"H: {H}")
 
         return Homography(H)

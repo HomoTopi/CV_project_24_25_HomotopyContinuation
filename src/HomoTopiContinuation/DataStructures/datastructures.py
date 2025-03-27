@@ -35,6 +35,9 @@ class Conic:
         Returns:
             tuple: The algebraic coefficients (a, b, c, d, e, f) where
                   the conic equation is ax² + bxy + cy² + dx + ey + f = 0
+                  a b/2 d/2
+                  b/2 c e/2
+                  d/2 e/2 f
         """
         return (
             self.M[0, 0],         # a
