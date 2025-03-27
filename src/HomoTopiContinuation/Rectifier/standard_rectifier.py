@@ -75,10 +75,13 @@ class StandardRectifier(Rectifier):
 
         eigs = np.linalg.eigvals(imDCCP)
 
+        # thresholding
+        eigs[np.abs(eigs) < 1e-3] = 0
+
         if np.any(eigs < 0):
             self.logger.error("imDCCP is not positive definite")
             raise ValueError(
-                "imDCCP is not positive definite! No homography can be computed.")
+                f"imDCCP is not positive definite! No homography can be computed. eigs: {eigs}")
 
         self.logger.info(f"imDCCP\n: {imDCCP}")
 

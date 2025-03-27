@@ -211,6 +211,15 @@ class Homography:
         """
         return la.inv(self.H)
 
+    def Hinv(self) -> 'Homography':
+        """
+        Return the inverse of the homography matrix.
+
+        Returns:
+            Homography: The inverse of the homography matrix
+        """
+        return Homography(self.inv())
+
     def __mul__(self, other: 'Homography') -> 'Homography':
         """
         Multiply two homographies.

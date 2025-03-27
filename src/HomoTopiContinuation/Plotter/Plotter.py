@@ -320,14 +320,11 @@ class Plotter:
             raise ValueError(
                 "Maximum number of plots reached. Please create a new figure.")
 
-        # First plot (on the left)
-        self.newAxis(title="Rectified Image", axisSame=True)
-        self.plotCircle2D(sceneDescription.circle1,
-                          name="Circle 1", color=colorC1)
-        self.plotCircle2D(sceneDescription.circle2,
-                          name="Circle 2", color=colorC2)
-        self.plotCircle2D(sceneDescription.circle3,
-                          name="Circle 3", color=colorC3)
+        # First plot (on the Left)
+        self.newAxis(title="Original Image", axisSame=True)
+        self.plotConic2D(img.C_img.C1, conicName="Conic 1", color=colorC1)
+        self.plotConic2D(img.C_img.C2, conicName="Conic 2", color=colorC2)
+        self.plotConic2D(img.C_img.C3, conicName="Conic 3", color=colorC3)
         self.drawLegend()
 
         # Second plot (in the middle)
@@ -343,10 +340,13 @@ class Plotter:
         self.drawLegend()
 
         # Third plot (on the right)
-        self.newAxis(title="Original Image", axisSame=True)
-        self.plotConic2D(img.C_img.C1, conicName="Conic 1", color=colorC1)
-        self.plotConic2D(img.C_img.C2, conicName="Conic 2", color=colorC2)
-        self.plotConic2D(img.C_img.C3, conicName="Conic 3", color=colorC3)
+        self.newAxis(title="Rectified Image", axisSame=True)
+        self.plotCircle2D(sceneDescription.circle1,
+                          name="Circle 1", color=colorC1)
+        self.plotCircle2D(sceneDescription.circle2,
+                          name="Circle 2", color=colorC2)
+        self.plotCircle2D(sceneDescription.circle3,
+                          name="Circle 3", color=colorC3)
         self.drawLegend()
 
     def show(self):

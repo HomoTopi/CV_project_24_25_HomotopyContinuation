@@ -8,7 +8,7 @@ import HomoTopiContinuation.Rectifier.standard_rectifier as sr
 def sceneDefinition() -> sg.SceneDescription:
     # Parameters
     f = 1
-    theta = 0
+    theta = 45
 
     # Define the circles
     c1 = Circle(np.array([0, 0]), 1)
@@ -27,22 +27,28 @@ def main():
 
     H_reconstructed = rectifier.rectify(img.C_img)
 
+    print("True Homography:")
+    print(img.h_true.inv())
+
+    print("Reconstructed Homography:")
     print(H_reconstructed.H)
 
     # Warp The Circles
-    C1_reconstructed = img.C_img.C1.applyHomography(H_reconstructed)
-    C2_reconstructed = img.C_img.C2.applyHomography(H_reconstructed)
-    C3_reconstructed = img.C_img.C3.applyHomography(H_reconstructed)
+    C1_reconstructed = img.C_img.C1.applyHomography(H_reconstructed.Hinv())
+    C2_reconstructed = img.C_img.C2.applyHomography(H_reconstructed.Hinv())
+    C3_reconstructed = img.C_img.C3.applyHomography(H_reconstructed.Hinv())
 
     plotter = Plotter.Plotter(3, 1, title="Experiment")
 
     plotter.plotScene(sceneDescription, img)
+    min_x, max_x = -3, 3
+    min_y, max_y = -3, 3
     plotter.plotConic2D(
-        C1_reconstructed, conicName="", color="red")
+        C1_reconstructed, conicName="", color="red", x_range=(min_x, max_x, 500), y_range=(min_y, max_y, 500))
     plotter.plotConic2D(
-        C2_reconstructed, conicName="", color="green")
+        C2_reconstructed, conicName="", color="green", x_range=(min_x, max_x, 500), y_range=(min_y, max_y, 500))
     plotter.plotConic2D(
-        C3_reconstructed, conicName="", color="blue")
+        C3_reconstructed, conicName="", color="blue", x_range=(min_x, max_x, 500), y_range=(min_y, max_y, 500))
 
     plotter.show()
 
