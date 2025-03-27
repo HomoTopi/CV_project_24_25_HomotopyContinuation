@@ -24,13 +24,14 @@ class SceneGenerator:
         # Convert circles to conics
         C1_true = scene_description.circle1.to_conic()
         C2_true = scene_description.circle2.to_conic()
+        C3_true = scene_description.circle3.to_conic()
         # Compute the homography
         H = SceneGenerator.compute_H(scene_description)
-        H_inv = H.inv()
         # Apply homography to the true conics
-        C1 = Conic(H_inv.T @ C1_true.M @ H_inv)
-        C2 = Conic(H_inv.T @ C2_true.M @ H_inv)
-        conics = Conics(C1, C2)
+        C1 = C1_true.applyHomography(H)
+        C2 = C2_true.applyHomography(H)
+        C3 = C3_true.applyHomography(H)
+        conics = Conics(C1, C2, C3)
         return Img(H, conics)
 
     @staticmethod

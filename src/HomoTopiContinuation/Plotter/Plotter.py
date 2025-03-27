@@ -267,7 +267,7 @@ class Plotter:
         self.ax.quiver(offset[0], offset[1], offset[2], j_hat[0], j_hat[1], j_hat[2],
                        color=colorY, label='Y', length=size, arrow_length_ratio=0.1)
 
-    def plotSceneNewPlotter(sceneDescription: sg.SceneDescription, img: Img, colorC1='r', colorC2='b', name='Scene') -> 'Plotter':
+    def plotSceneNewPlotter(sceneDescription: sg.SceneDescription, img: Img, colorC1='r', colorC2='g', colorC3='b', name='Scene') -> 'Plotter':
         """
         Plot a scene with the original image, the rectified image, and the 3D scene.
         This will produce three plots:
@@ -281,7 +281,8 @@ class Plotter:
             sceneDescription (sg.SceneDescription): The description of the scene
             img (Img): The image of the scene
             colorC1 (str, optional): The color for the plotting of the first conic. Defaults to 'r'.
-            colorC2 (str, optional): The color for the plotting of the second conic. Defaults to 'b'.
+            colorC2 (str, optional): The color for the plotting of the second conic. Defaults to 'g'.
+            colorC3 (str, optional): The color for the plotting of the third conic. Defaults to 'b'.
             name (str, optional): The name of the scene. Defaults to 'Scene'.
 
         Returns:
@@ -289,13 +290,14 @@ class Plotter:
         """
         plotter = Plotter(nPlotsx=3, nPlotsy=1, figsize=(10, 10), title=name)
 
-        plotter.plotScene(sceneDescription, img, colorC1, colorC2, name)
+        plotter.plotScene(sceneDescription, img, colorC1,
+                          colorC2, colorC3, name)
 
         plotter.show()
 
         return plotter
 
-    def plotScene(self, sceneDescription: sg.SceneDescription, img: Img, colorC1='r', colorC2='b', name='Scene'):
+    def plotScene(self, sceneDescription: sg.SceneDescription, img: Img, colorC1='r', colorC2='g', colorC3='b', name='Scene'):
         """
         Plot a scene with the original image, the rectified image, and the 3D scene.
         This will produce three plots:
@@ -309,7 +311,8 @@ class Plotter:
             sceneDescription (sg.SceneDescription): The description of the scene
             img (Img): The image of the scene
             colorC1 (str, optional): The color for the plotting of the first conic. Defaults to 'r'.
-            colorC2 (str, optional): The color for the plotting of the second conic. Defaults to 'b'.
+            colorC2 (str, optional): The color for the plotting of the second conic. Defaults to 'g'.
+            colorC3 (str, optional): The color for the plotting of the third conic. Defaults to 'b'.
             name (str, optional): The name of the scene. Defaults to 'Scene'.
         """
 
@@ -323,6 +326,8 @@ class Plotter:
                           name="Circle 1", color=colorC1)
         self.plotCircle2D(sceneDescription.circle2,
                           name="Circle 2", color=colorC2)
+        self.plotCircle2D(sceneDescription.circle3,
+                          name="Circle 3", color=colorC3)
         self.drawLegend()
 
         # Second plot (in the middle)
@@ -333,12 +338,15 @@ class Plotter:
                           sceneDescription, color=colorC1, name="Circle 1")
         self.plotCircle3D(sceneDescription.circle2,
                           sceneDescription, color=colorC2, name="Circle 2")
+        self.plotCircle3D(sceneDescription.circle3,
+                          sceneDescription, color=colorC3, name="Circle 3")
         self.drawLegend()
 
         # Third plot (on the right)
         self.newAxis(title="Original Image", axisSame=True)
         self.plotConic2D(img.C_img.C1, conicName="Conic 1", color=colorC1)
         self.plotConic2D(img.C_img.C2, conicName="Conic 2", color=colorC2)
+        self.plotConic2D(img.C_img.C3, conicName="Conic 3", color=colorC3)
         self.drawLegend()
 
     def show(self):
@@ -352,12 +360,13 @@ if __name__ == "__main__":
     # Define the circle
     c1 = Circle(np.array([0, 0]), 1)
     c2 = Circle(np.array([0.5, 0]), 1)
+    c3 = Circle(np.array([0, 0.5]), 1)
 
     # Second plot (on the right)
-    sd = sg.SceneDescription(1, 30, np.array([0, 0, 2]), c1, c2)
+    sd = sg.SceneDescription(1, 30, np.array([0, 0, 2]), c1, c2, c3)
 
     # Generate Image
     image = sg.SceneGenerator.generate_scene(sd)
 
     Plotter.plotSceneNewPlotter(
-        sd, image, colorC1='b', colorC2='g', name='Scene')
+        sd, image, name='Scene')

@@ -29,22 +29,18 @@ class StandardRectifier(Rectifier):
         self.logger.info("Rectifying using scipy")
 
         self.logger.info(f"Conics: {C_img}")
-        
-    
+
         # Extract algebraic parameters from conics
         a1, b1, c1, d1, e1, f1 = C_img.C1.to_algebraic_form()
         a2, b2, c2, d2, e2, f2 = C_img.C2.to_algebraic_form()
-        a3, b3, c3, d3, e3, f3 = a2, b2, c2, d2, e2, f2*0.5
-        
-        self.logger.info(f"a\n{C_img.C1.M}")
-        self.logger.info(f"b\n{C_img.C2.M}")
+        a3, b3, c3, d3, e3, f3 = C_img.C3.to_algebraic_form()
 
         self.logger.info(
-            f"Equation 1: {a1}*x^2 + {b1}*x*y + {c1}*y^2 + {d1}*x + {e1}*y + {f1}")
+            f"Equation 1: {a1}*x^2 + {b1}*x*y + {c1}*y^2 + {d1}*x*w + {e1}*y*w + {f1}*w^2")
         self.logger.info(
-            f"Equation 2: {a2}*x^2 + {b2}*x*y + {c2}*y^2 + {d2}*x + {e2}*y + {f2}")
+            f"Equation 2: {a2}*x^2 + {b2}*x*y + {c2}*y^2 + {d2}*x*w + {e2}*y*w + {f2}*w^2")
         self.logger.info(
-            f"Equation 3: {a3}*x^2 + {b3}*x*y + {c3}*y^2 + {d3}*x + {e3}*y + {f3}")
+            f"Equation 3: {a3}*x^2 + {b3}*x*y + {c3}*y^2 + {d3}*x*w + {e3}*y*w + {f3}*w^2")
 
         x, y, w = symbols('x y w')
         eq = [Eq(a1*x**2 + b1*x*y + c1*y**2 + d1*x*w + e1*y*w + f1*w**2, 0),
@@ -52,39 +48,38 @@ class StandardRectifier(Rectifier):
               Eq(a3*x**2 + b3*x*y + c3*y**2 + d3*x*w + e3*y*w + f3*w**2, 0)]
 
         # Solve the system of equations
-        #solutions = fsolve(eq, [0, 0, 0])
+        # TODO filter real solutions
         solutions = solve(eq, (x, y, w))
-        #s = complex(solutions[0], solutions[1])
         self.logger.info(f"Solutions: {solutions}")
-        
+
         sols = []
         for expr_tuple in solutions:
             t = []
             for expr in expr_tuple:
                 t.append(complex(expr.subs({x: 1, y: 1, w: 1})))
             sols.append(t)
-        
+
         sols = np.array(sols)
         self.logger.info(f"Solutions: {sols}")
-
 
         # Extract intersection points
         II = sols[0]
         JJ = sols[1]
-        
+
         self.logger.info(f"II: {II}")
         self.logger.info(f"JJ: {JJ}")
 
         # Compute the dual conic of the circular points
         imDCCP = np.outer(II, JJ.T) + np.outer(JJ, II.T)
         imDCCP = imDCCP / la.norm(imDCCP)
-        
+
         eigs = np.linalg.eigvals(imDCCP)
-        
+
         if np.any(eigs < 0):
             self.logger.error("imDCCP is not positive definite")
-            raise ValueError("imDCCP is not positive definite! No homography can be computed.")
-        
+            raise ValueError(
+                "imDCCP is not positive definite! No homography can be computed.")
+
         self.logger.info(f"imDCCP\n: {imDCCP}")
 
         # Singular value decomposition

@@ -13,9 +13,10 @@ def sceneDefinition() -> sg.SceneDescription:
     # Define the circles
     c1 = Circle(np.array([0, 0]), 1)
     c2 = Circle(np.array([0.5, 0]), 1)
+    c3 = Circle(np.array([0, 0]), 2)
     offset = np.array([0, 0, 2])
 
-    return sg.SceneDescription(f, theta, offset, c1, c2)
+    return sg.SceneDescription(f, theta, offset, c1, c2, c3)
 
 
 def main():
@@ -31,14 +32,17 @@ def main():
     # Warp The Circles
     C1_reconstructed = img.C_img.C1.applyHomography(H_reconstructed)
     C2_reconstructed = img.C_img.C2.applyHomography(H_reconstructed)
+    C3_reconstructed = img.C_img.C3.applyHomography(H_reconstructed)
 
     plotter = Plotter.Plotter(3, 1, title="Experiment")
 
     plotter.plotScene(sceneDescription, img)
     plotter.plotConic2D(
-        C1_reconstructed, conicName="Reconstructed Circle 1", color="red")
+        C1_reconstructed, conicName="", color="red")
     plotter.plotConic2D(
-        C2_reconstructed, conicName="Reconstructed Circle 2", color="blue")
+        C2_reconstructed, conicName="", color="green")
+    plotter.plotConic2D(
+        C3_reconstructed, conicName="", color="blue")
 
     plotter.show()
 

@@ -77,27 +77,30 @@ class Conics:
     Attributes:
         C1 (Conic): First conic
         C2 (Conic): Second conic
+        C3 (Conic): Third conic
     """
 
-    def __init__(self, C1: Conic, C2: Conic):
+    def __init__(self, C1: Conic, C2: Conic, C3: Conic):
         """
         Initialize a Conics object with two conics.
 
         Args:
             C1 (Conic): First conic
             C2 (Conic): Second conic
+            C3 (Conic): Third conic
         """
         self.C1 = C1
         self.C2 = C2
+        self.C3 = C3
 
     def __call__(self):
         """
         Return the pair of conics.
 
         Returns:
-            tuple: The pair of conics (C1, C2)
+            tuple: The pair of conics (C1, C2, C3)
         """
-        return self.C1, self.C2
+        return self.C1, self.C2, self.C3
 
 
 class Circle:
@@ -140,18 +143,20 @@ class SceneDescription:
         offset (numpy.ndarray): Offset of the camera from the origin
         circle1 (circle): First circle
         circle2 (circle): Second circle
+        cicrle3 (circle): Third circle
     """
 
-    def __init__(self, f: float, y_rotation: float, offset: np.ndarray, circle1: Circle, circle2: Circle):
+    def __init__(self, f: float, y_rotation: float, offset: np.ndarray, circle1: Circle, circle2: Circle, circle3: Circle):
         """
         Initialize a SceneDescription object.
 
         Args:
             f (float): Focal length
             y_rotation (float): Rotation angle around the y-axis in degrees 
+            offset (numpy.ndarray): Offset of the camera from the origin
             circle1 (Circle): Parameters of the first circle
             circle2 (Circle): Parameters of the second circle
-            offset (numpy.ndarray): Offset of the camera from the origin
+            circle3 (Circle): Parameters of the third circle
 
         """
         if f <= 0:
@@ -162,6 +167,7 @@ class SceneDescription:
         self.y_rotation = y_rotation
         self.circle1 = circle1
         self.circle2 = circle2
+        self.circle3 = circle3
         self.offset = offset
 
 
