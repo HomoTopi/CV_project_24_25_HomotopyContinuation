@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from HomoTopiContinuation.DataStructures.datastructures import Conics, Homography
-
+import logging
 
 class Rectifier(ABC):
     """
@@ -8,6 +8,13 @@ class Rectifier(ABC):
 
     This class defines the interface that all rectifiers must implement.
     """
+    def __init__(self):
+        logging.basicConfig(
+            filename='rectifier.log',
+            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+            level=logging.INFO
+        )
+        self.logger = logging.getLogger(self.__class__.__name__)
 
     @abstractmethod
     def rectify(self, C_img: Conics) -> Homography:
