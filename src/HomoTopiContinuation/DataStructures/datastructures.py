@@ -101,6 +101,12 @@ class Conics:
             tuple: The pair of conics (C1, C2, C3)
         """
         return self.C1, self.C2, self.C3
+    
+    def __str__(self):
+        """
+        Return a string representation of the pair of conics.
+        """
+        return f"""C1:\n{self.C1.M}\nC2:\n{self.C2.M}\nC3:\n{self.C3.M}"""
 
 
 class Circle:
@@ -189,7 +195,8 @@ class Homography:
         if (H.shape != (3, 3)):
             raise ValueError(f"Homography matrix must be 3×3, got {H.shape}")
         if np.abs(la.det(H)) < 1e-6:
-            raise ValueError("Homography matrix must be invertible")
+            raise ValueError(
+                "Homography matrix must be invertible, det(H) = " + str(la.det(H)))
 
         self.H = H
 
