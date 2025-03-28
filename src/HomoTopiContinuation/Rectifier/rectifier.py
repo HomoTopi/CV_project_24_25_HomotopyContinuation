@@ -8,7 +8,8 @@ class Rectifier(ABC):
 
     This class defines the interface that all rectifiers must implement.
     """
-    def __init__(self):
+    def __init__(self, treshold: float = 1e-3):
+        self.treshold = treshold
         logging.basicConfig(
             filename='rectifier.log',
             format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
