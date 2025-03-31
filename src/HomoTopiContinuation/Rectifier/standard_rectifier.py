@@ -89,27 +89,6 @@ class StandardRectifier(Rectifier):
         imDCCP = np.outer(II, JJ.T) + np.outer(JJ, II.T)
         imDCCP = imDCCP / la.norm(imDCCP)
 
-        eigs = np.linalg.eigvals(imDCCP)
+        H = self._compute_h_from_svd(imDCCP)
 
-        # thresholding
-        eigs[np.abs(eigs) < self.treshold] = 0
-
-        if np.any(eigs < 0):
-            self.logger.error("imDCCP is not positive definite")
-            raise ValueError(
-                f"imDCCP is not positive definite! No homography can be computed. eigs: {eigs}")
-
-        self.logger.info(f"imDCCP\n: {imDCCP}")
-
-        # Singular value decomposition
-        U, S, Vt = la.svd(imDCCP)
-        self.logger.info(f"U\n: {U}")
-        self.logger.info(f"S\n: {S}")
-        self.logger.info(f"V\n: {Vt}")
-
-        # Compute the homography
-        H = np.diag(1.0 / np.sqrt([S[0], S[1], 1.0])) @ U.T
-
-        self.logger.info(f"H: {H}")
-
-        return Homography(H)
+        return H

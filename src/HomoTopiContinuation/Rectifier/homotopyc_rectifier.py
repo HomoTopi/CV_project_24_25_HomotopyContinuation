@@ -22,9 +22,7 @@ class HomotopyContinuationRectifier(Rectifier):
         # add the HomotopyContinuation package
         juliapkg.add("HomotopyContinuation","f213a82b-91d6-5c5d-acf7-10f1c761b327")
         juliapkg.resolve()
-        
-        logging.basicConfig(level=logging.DEBUG)
-        
+                
         # call the __init__ of the parent class
         super().__init__()
         
@@ -40,55 +38,48 @@ class HomotopyContinuationRectifier(Rectifier):
         """
         
         script = self._get_script('Julia/rectify.jl')
-        logging.info("Rectifying using HomotopyContinuation.jl")
-        logging.debug(f"Conics: {C_img}")
+        self.logger.info("Rectifying using HomotopyContinuation.jl")
+        self.logger.debug(f"Conics: {C_img}")
         
-        logging.info(f"Evaluating script: {script}")
+        self.logger.info(f"Evaluating script: {script}")
 
         # Extract algebraic parameters from conics
         a1, b1, c1, d1, e1, f1 = C_img.C1.to_algebraic_form()
         a2, b2, c2, d2, e2, f2 = C_img.C2.to_algebraic_form()
-        
+        a3, b3, c3, d3, e3, f3 = C_img.C3.to_algebraic_form()
         
         jl.a1, jl.b1, jl.c1, jl.d1, jl.e1, jl.f1 = np.array([a1, b1, c1, d1, e1, f1])
         jl.a2, jl.b2, jl.c2, jl.d2, jl.e2, jl.f2 = np.array([a2, b2, c2, d2, e2, f2])
+        jl.a3, jl.b3, jl.c3, jl.d3, jl.e3, jl.f3 = np.array([a3, b3, c3, d3, e3, f3])
         
         jl.seval(script)
         ## TODO: check if casting is the same as the one used in SymPy
         solutions = np.array([ np.complex128(sol) for sol in jl.sol])
-        real_solutions = np.array([ np.float64(sol) for sol in jl.real_sol])
-        logging.debug(f"Result: {solutions}")
-        logging.info(f"Real solutions: {real_solutions}")
+        #real_solutions = np.array([ np.float64(sol) for sol in jl.real_sol])
+        self.logger.info(f"Result: {solutions}")
+        #self.logger.info(f"Real solutions: {real_solutions}")
         ## TODO: extract the intersection points from the result
         ## TODO: compute the rectification homography both by svd and by a fully homotopy continuation approach
         
-        assert len(real_solutions) == 2, "No intersection points found"
+        assert len(solutions) >= 2, "No intersection points found"
         
-        II = np.array([real_solutions[0][0], real_solutions[0][1], 1.0])
-        JJ = np.array([real_solutions[1][0], real_solutions[1][1], 1.0])
-        logging.info(f"II: {II}")
-        logging.info(f"JJ: {JJ}")
+        II = solutions[0]
+        JJ = solutions[1]
+        self.logger.info(f"II: {II}")
+        self.logger.info(f"JJ: {JJ}")
         
         # Compute the dual conic of the circular points
         imDCCP = np.outer(II, JJ) + np.outer(JJ, II)
 
         # Normalize
         imDCCP = imDCCP / la.norm(imDCCP)
-        logging.debug(f"imDCCP: {imDCCP}")
+        self.logger.info(f"imDCCP: {imDCCP}")
 
-        # Singular value decomposition
-        U, S, Vt = la.svd(imDCCP)
-        logging.debug(f"U: {U}")
-        logging.debug(f"S: {S}")
-        logging.debug(f"V: {Vt}")
+        H = self._compute_h_from_svd(imDCCP)
 
-        # Compute the homography
-        H = np.diag(1.0 / np.sqrt(S)) @ U.T
-
-        logging.debug(f"H: {H}")
-
-        return Homography(H)
+        return H
         
+    
     def _get_script(self, filename: str) -> str:
         path = os.path.join(os.path.dirname(__file__), filename)
         script = open(path, "r").read()
