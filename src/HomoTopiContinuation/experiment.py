@@ -8,7 +8,7 @@ import HomoTopiContinuation.Rectifier.standard_rectifier as sr
 def sceneDefinition() -> sg.SceneDescription:
     # Parameters
     f = 1
-    theta = 45
+    theta = 20
 
     # Define the circles
     c1 = Circle(np.array([0, 0]), 1)
@@ -27,9 +27,11 @@ def main():
     print("[Scene Generated]")
 
     rectifier = sr.StandardRectifier()
-
-    H_reconstructed = rectifier.rectify(img.C_img)
-    print("[Rectified]")
+    try:
+        H_reconstructed = rectifier.rectify(img.C_img)
+    except ValueError as e:
+        print(e)
+        return
 
     print("True Homography:")
     print(img.h_true.H)

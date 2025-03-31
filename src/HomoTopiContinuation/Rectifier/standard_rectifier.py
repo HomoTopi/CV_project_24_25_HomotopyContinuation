@@ -49,18 +49,35 @@ class StandardRectifier(Rectifier):
 
         # Solve the system of equations
         # TODO filter real solutions
+
         solutions = solve(eq, (x, y, w))
-        self.logger.info(f"Solutions: {solutions}")
+        self.logger.debug(f"Result of solve: {solutions}")
 
-        sols = []
-        for expr_tuple in solutions:
-            t = []
-            for expr in expr_tuple:
-                t.append(complex(expr.subs({x: 1, y: 1, w: 1})))
-            sols.append(t)
+        # Extract complex solutions
+        sols = np.array([[complex(expr.subs({x: 1, y: 1, w: 1}))
+                        for expr in expr_tuple] for expr_tuple in solutions])
+        self.logger.info(f"Solutions before filtering: {sols}")
 
-        sols = np.array(sols)
-        self.logger.info(f"Solutions: {sols}")
+        if len(sols) == 0:
+            self.logger.error("No solutions found")
+            raise ValueError(
+                f"No solutions found! sols: {sols}")
+
+        # remove all points which have all real parts
+        # [
+        # [ x_1, y_1, w_1],
+        # [ x_2, y_2, w_2],
+        # ]
+        # if all x_i, y_i, w_i are real, remove the point
+        all_sols = sols.copy()
+        sols = sols[~np.all(np.isreal(sols), axis=1)]
+        self.logger.info(f"Complex solutions after filtering: {sols}")
+
+        # if there are less than 2 complex solutions, raise an error
+        if len(sols) < 2:
+            self.logger.error("Less than 2 complex solutions found")
+            raise ValueError(
+                f"Less than 2 complex solutions found! sols: {all_sols}")
 
         # Extract intersection points
         II = sols[0][:, None]
@@ -70,26 +87,9 @@ class StandardRectifier(Rectifier):
         self.logger.info(f"JJ: {JJ}")
 
         # Compute the dual conic of the circular points
-        imDCCP = II @ JJ.T + JJ @ II.T
-        # imDCCP = imDCCP / la.norm(imDCCP)
+        imDCCP = np.outer(II, JJ.T) + np.outer(JJ, II.T)
+        imDCCP = imDCCP / la.norm(imDCCP)
 
-        self.logger.info(f"imDCCP\n: {imDCCP}")
+        H = self._compute_h_from_svd(imDCCP)
 
-        # Singular value decomposition
-        U, S, Vt = la.svd(imDCCP)
-
-        if np.any(S < 0):
-            self.logger.error("imDCCP is not positive definite")
-            raise ValueError(
-                f"imDCCP is not positive definite! No homography can be computed. sv: {S}")
-
-        self.logger.info(f"U\n: {U}")
-        self.logger.info(f"S\n: {S}")
-        self.logger.info(f"V\n: {Vt}")
-
-        # Compute the homography
-        H = np.diag(1.0 / np.sqrt([S[0], S[1], 1.0])) @ U.T
-
-        self.logger.info(f"H: {H}")
-
-        return Homography(H)
+        return H
