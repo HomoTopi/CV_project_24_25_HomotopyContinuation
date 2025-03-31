@@ -13,7 +13,7 @@ def sceneDefinition() -> sg.SceneDescription:
     # Define the circles
     c1 = Circle(np.array([0, 0]), 1)
     c2 = Circle(np.array([0.5, 0]), 1)
-    c3 = Circle(np.array([0, 0]), 2)
+    c3 = Circle(np.array([0, 0]), 1.5)
     offset = np.array([0, 0, 2])
 
     return sg.SceneDescription(f, theta, offset, c1, c2, c3)
@@ -21,22 +21,26 @@ def sceneDefinition() -> sg.SceneDescription:
 
 def main():
     sceneDescription = sceneDefinition()
+    print("[Scene Described]")
+
     img = sg.SceneGenerator.generate_scene(sceneDescription)
+    print("[Scene Generated]")
 
     rectifier = sr.StandardRectifier()
 
     H_reconstructed = rectifier.rectify(img.C_img)
+    print("[Rectified]")
 
     print("True Homography:")
-    print(img.h_true.inv())
+    print(img.h_true.H)
 
     print("Reconstructed Homography:")
     print(H_reconstructed.H)
 
     # Warp The Circles
-    C1_reconstructed = img.C_img.C1.applyHomography(H_reconstructed.Hinv())
-    C2_reconstructed = img.C_img.C2.applyHomography(H_reconstructed.Hinv())
-    C3_reconstructed = img.C_img.C3.applyHomography(H_reconstructed.Hinv())
+    C1_reconstructed = img.C_img.C1.applyHomography(H_reconstructed)
+    C2_reconstructed = img.C_img.C2.applyHomography(H_reconstructed)
+    C3_reconstructed = img.C_img.C3.applyHomography(H_reconstructed)
 
     plotter = Plotter.Plotter(3, 1, title="Experiment")
 

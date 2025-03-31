@@ -63,30 +63,26 @@ class StandardRectifier(Rectifier):
         self.logger.info(f"Solutions: {sols}")
 
         # Extract intersection points
-        II = sols[0]
-        JJ = sols[1]
+        II = sols[0][:, None]
+        JJ = sols[1][:, None]
 
         self.logger.info(f"II: {II}")
         self.logger.info(f"JJ: {JJ}")
 
         # Compute the dual conic of the circular points
-        imDCCP = np.outer(II, JJ.T) + np.outer(JJ, II.T)
-        imDCCP = imDCCP / la.norm(imDCCP)
-
-        eigs = np.linalg.eigvals(imDCCP)
-
-        # thresholding
-        eigs[np.abs(eigs) < 1e-3] = 0
-
-        if np.any(eigs < 0):
-            self.logger.error("imDCCP is not positive definite")
-            raise ValueError(
-                f"imDCCP is not positive definite! No homography can be computed. eigs: {eigs}")
+        imDCCP = II @ JJ.T + JJ @ II.T
+        # imDCCP = imDCCP / la.norm(imDCCP)
 
         self.logger.info(f"imDCCP\n: {imDCCP}")
 
         # Singular value decomposition
         U, S, Vt = la.svd(imDCCP)
+
+        if np.any(S < 0):
+            self.logger.error("imDCCP is not positive definite")
+            raise ValueError(
+                f"imDCCP is not positive definite! No homography can be computed. sv: {S}")
+
         self.logger.info(f"U\n: {U}")
         self.logger.info(f"S\n: {S}")
         self.logger.info(f"V\n: {Vt}")
