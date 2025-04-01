@@ -49,36 +49,30 @@ class HomotopyContinuationRectifier(Rectifier):
         a2, b2, c2, d2, e2, f2 = C_img.C2.to_algebraic_form()
         a3, b3, c3, d3, e3, f3 = C_img.C3.to_algebraic_form()
 
-        jl.a1, jl.b1, jl.c1, jl.d1, jl.e1, jl.f1 = np.array(
-            [a1, b1, c1, d1, e1, f1])
-        jl.a2, jl.b2, jl.c2, jl.d2, jl.e2, jl.f2 = np.array(
-            [a2, b2, c2, d2, e2, f2])
-        jl.a3, jl.b3, jl.c3, jl.d3, jl.e3, jl.f3 = np.array(
-            [a3, b3, c3, d3, e3, f3])
+
+        self.logger.info(
+            f"Equation 1: {a1}*x^2 + {b1}*x*y + {c1}*y^2 + {d1}*x*w + {e1}*y*w + {f1}*w^2")
+        self.logger.info(
+            f"Equation 2: {a2}*x^2 + {b2}*x*y + {c2}*y^2 + {d2}*x*w + {e2}*y*w + {f2}*w^2")
+        self.logger.info(
+            f"Equation 3: {a3}*x^2 + {b3}*x*y + {c3}*y^2 + {d3}*x*w + {e3}*y*w + {f3}*w^2")
+        
+        
+        jl.a1, jl.b1, jl.c1, jl.d1, jl.e1, jl.f1 = a1, b1, c1, d1, e1, f1
+        jl.a2, jl.b2, jl.c2, jl.d2, jl.e2, jl.f2 = a2, b2, c2, d2, e2, f2
+        jl.a3, jl.b3, jl.c3, jl.d3, jl.e3, jl.f3 = a3, b3, c3, d3, e3, f3
 
         jl.seval(script)
         # TODO: check if casting is the same as the one used in SymPy
-        solutions = np.array([np.complex128(sol) for sol in jl.sol])
+        solutions = np.array([[complex(sol) for sol in sol_tuple]
+                        for sol_tuple in jl.complex_sols])
         # real_solutions = np.array([ np.float64(sol) for sol in jl.real_sol])
         self.logger.info(f"Result: {solutions}")
         # self.logger.info(f"Real solutions: {real_solutions}")
         # TODO: extract the intersection points from the result
         # TODO: compute the rectification homography both by svd and by a fully homotopy continuation approach
 
-        assert len(solutions) >= 2, "No intersection points found"
-
-        II = solutions[0]
-        JJ = solutions[1]
-        self.logger.info(f"II: {II}")
-        self.logger.info(f"JJ: {JJ}")
-
-        # Compute the dual conic of the circular points
-        imDCCP = np.outer(II, JJ) + np.outer(JJ, II)
-
-        # Normalize
-        imDCCP = imDCCP / la.norm(imDCCP)
-        self.logger.info(f"imDCCP: {imDCCP}")
-
+        imDCCP = self.compute_imDCCP_from_solutions(solutions)
         H = self._compute_h_from_svd(imDCCP)
 
         return H

@@ -62,34 +62,9 @@ class StandardRectifier(Rectifier):
             self.logger.error("No solutions found")
             raise ValueError(
                 f"No solutions found! sols: {sols}")
-
-        # remove all points which have all real parts
-        # [
-        # [ x_1, y_1, w_1],
-        # [ x_2, y_2, w_2],
-        # ]
-        # if all x_i, y_i, w_i are real, remove the point
-        all_sols = sols.copy()
-        sols = sols[~np.all(np.isreal(sols), axis=1)]
-        self.logger.info(f"Complex solutions after filtering: {sols}")
-
-        # if there are less than 2 complex solutions, raise an error
-        if len(sols) < 2:
-            self.logger.error("Less than 2 complex solutions found")
-            raise ValueError(
-                f"Less than 2 complex solutions found! sols: {all_sols}")
-
-        # Extract intersection points
-        II = sols[0][:, None]
-        JJ = sols[1][:, None]
-
-        self.logger.info(f"II: {II}")
-        self.logger.info(f"JJ: {JJ}")
-
-        # Compute the dual conic of the circular points
-        imDCCP = II @ JJ.T + JJ @ II.T
-        # imDCCP = imDCCP / la.norm(imDCCP)
-
+            
+            
+        imDCCP = self.compute_imDCCP_from_solutions(sols)
         H = self._compute_h_from_svd(imDCCP)
 
         return H
