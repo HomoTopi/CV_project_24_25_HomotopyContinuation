@@ -46,17 +46,20 @@ def main():
     C2_reconstructed = img.C_img.C2.applyHomography(H_reconstructed)
     C3_reconstructed = img.C_img.C3.applyHomography(H_reconstructed)
 
-    plotter = Plotter.Plotter(3, 1, title="Experiment")
+    plotter = Plotter.Plotter(2, 2, title="Experiment")
 
     plotter.plotScene(sceneDescription, img)
-    min_x, max_x = -3, 3
-    min_y, max_y = -3, 3
+
+    plotter.newAxis("Reconstructed Rectification")
+    size = 2
+    min_x, max_x = -size, size
+    min_y, max_y = -size, size
     plotter.plotConic2D(
-        C1_reconstructed, conicName="", color="red", x_range=(min_x, max_x, 500), y_range=(min_y, max_y, 500))
+        C1_reconstructed, conicName="C1", color="red", x_range=(min_x, max_x, 500), y_range=(min_y, max_y, 500))
     plotter.plotConic2D(
-        C2_reconstructed, conicName="", color="green", x_range=(min_x, max_x, 500), y_range=(min_y, max_y, 500))
+        C2_reconstructed, conicName="C2", color="green", x_range=(min_x, max_x, 500), y_range=(min_y, max_y, 500))
     plotter.plotConic2D(
-        C3_reconstructed, conicName="", color="blue", x_range=(min_x, max_x, 500), y_range=(min_y, max_y, 500))
+        C3_reconstructed, conicName="C3", color="blue", x_range=(min_x, max_x, 500), y_range=(min_y, max_y, 500))
 
     plotter.show()
 
