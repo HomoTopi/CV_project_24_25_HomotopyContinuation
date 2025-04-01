@@ -4,12 +4,14 @@ import logging
 import numpy as np
 import numpy.linalg as la
 
+
 class Rectifier(ABC):
     """
     Abstract base class for rectification algorithms.
 
     This class defines the interface that all rectifiers must implement.
     """
+
     def __init__(self, treshold: float = 1e-3):
         self.treshold = treshold
         logging.basicConfig(
@@ -40,20 +42,16 @@ class Rectifier(ABC):
         """
         Compute the Homography from the SVD of the image dual conic.
         """
-        eigs = np.linalg.eigvals(imDCCP)
-
-        # thresholding
-        eigs[np.abs(eigs) < self.treshold] = 0
-
-        if np.any(eigs < 0):
-            self.logger.error("imDCCP is not positive definite")
-            raise ValueError(
-                f"imDCCP is not positive definite! No homography can be computed. eigs: {eigs}")
 
         self.logger.info(f"imDCCP\n: {imDCCP}")
 
         # Singular value decomposition
         U, S, Vt = la.svd(imDCCP)
+        if np.any(S < 0):
+            self.logger.error("imDCCP is not positive definite")
+            raise ValueError(
+                f"imDCCP is not positive definite! No homography can be computed. Singular values: {S}")
+
         self.logger.info(f"U\n: {U}")
         self.logger.info(f"S\n: {S}")
         self.logger.info(f"V\n: {Vt}")

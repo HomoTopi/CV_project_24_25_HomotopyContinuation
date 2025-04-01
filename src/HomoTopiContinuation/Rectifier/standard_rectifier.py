@@ -87,8 +87,8 @@ class StandardRectifier(Rectifier):
         self.logger.info(f"JJ: {JJ}")
 
         # Compute the dual conic of the circular points
-        imDCCP = np.outer(II, JJ.T) + np.outer(JJ, II.T)
-        imDCCP = imDCCP / la.norm(imDCCP)
+        imDCCP = II @ JJ.T + JJ @ II.T
+        # imDCCP = imDCCP / la.norm(imDCCP)
 
         H = self._compute_h_from_svd(imDCCP)
 

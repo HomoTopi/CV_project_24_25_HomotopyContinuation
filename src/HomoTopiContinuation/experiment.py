@@ -3,12 +3,13 @@ import numpy as np
 import HomoTopiContinuation.Plotter.Plotter as Plotter
 import HomoTopiContinuation.SceneGenerator.scene_generator as sg
 import HomoTopiContinuation.Rectifier.standard_rectifier as sr
+# import HomoTopiContinuation.Rectifier.homotopyc_rectifier as hr
 
 
 def sceneDefinition() -> sg.SceneDescription:
     # Parameters
     f = 1
-    theta = 20
+    theta = 0
 
     # Define the circles
     c1 = Circle(np.array([0, 0]), 1)
@@ -27,6 +28,7 @@ def main():
     print("[Scene Generated]")
 
     rectifier = sr.StandardRectifier()
+    # rectifier = hr.HomotopyContinuationRectifier()
     try:
         H_reconstructed = rectifier.rectify(img.C_img)
     except ValueError as e:
