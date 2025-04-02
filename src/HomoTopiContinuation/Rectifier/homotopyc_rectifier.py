@@ -72,6 +72,7 @@ class HomotopyContinuationRectifier(Rectifier):
 
         imDCCP = self.compute_imDCCP_from_solutions(solutions)
         H = self._compute_h_from_svd(imDCCP)
+        # H.H = H.H / H.H[2, 2]
 
         return H
 
