@@ -1,6 +1,7 @@
 README.md
 setup.py
 src/HomoTopiContinuation/__init__.py
+src/HomoTopiContinuation/experiment.py
 src/HomoTopiContinuation.egg-info/PKG-INFO
 src/HomoTopiContinuation.egg-info/SOURCES.txt
 src/HomoTopiContinuation.egg-info/dependency_links.txt
@@ -9,10 +10,18 @@ src/HomoTopiContinuation/DataStructures/__init__.py
 src/HomoTopiContinuation/DataStructures/datastructures.py
 src/HomoTopiContinuation/ImageWarper/ImageWarper.py
 src/HomoTopiContinuation/ImageWarper/__init__.py
+src/HomoTopiContinuation/Losser/AngleDistortionLosser.py
 src/HomoTopiContinuation/Losser/FrobNormLosser.py
+src/HomoTopiContinuation/Losser/LinfLosser.py
 src/HomoTopiContinuation/Losser/Losser.py
+src/HomoTopiContinuation/Losser/ReconstructionErrorLosser.py
 src/HomoTopiContinuation/Losser/__init__.py
+src/HomoTopiContinuation/Plotter/CameraPlotter.py
+src/HomoTopiContinuation/Plotter/Plotter.py
+src/HomoTopiContinuation/Plotter/__init__.py
 src/HomoTopiContinuation/Rectifier/__init__.py
-src/HomoTopiContinuation/Rectifier/example.py
+src/HomoTopiContinuation/Rectifier/homotopyc_rectifier.py
 src/HomoTopiContinuation/Rectifier/rectifier.py
 src/HomoTopiContinuation/Rectifier/standard_rectifier.py
+src/HomoTopiContinuation/SceneGenerator/__init__.py
+src/HomoTopiContinuation/SceneGenerator/scene_generator.py

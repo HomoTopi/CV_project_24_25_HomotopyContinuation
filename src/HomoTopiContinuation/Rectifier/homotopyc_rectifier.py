@@ -49,15 +49,13 @@ class HomotopyContinuationRectifier(Rectifier):
         a2, b2, c2, d2, e2, f2 = C_img.C2.to_algebraic_form()
         a3, b3, c3, d3, e3, f3 = C_img.C3.to_algebraic_form()
 
-
         self.logger.info(
             f"Equation 1: {a1}*x^2 + {b1}*x*y + {c1}*y^2 + {d1}*x*w + {e1}*y*w + {f1}*w^2")
         self.logger.info(
             f"Equation 2: {a2}*x^2 + {b2}*x*y + {c2}*y^2 + {d2}*x*w + {e2}*y*w + {f2}*w^2")
         self.logger.info(
             f"Equation 3: {a3}*x^2 + {b3}*x*y + {c3}*y^2 + {d3}*x*w + {e3}*y*w + {f3}*w^2")
-        
-        
+
         jl.a1, jl.b1, jl.c1, jl.d1, jl.e1, jl.f1 = a1, b1, c1, d1, e1, f1
         jl.a2, jl.b2, jl.c2, jl.d2, jl.e2, jl.f2 = a2, b2, c2, d2, e2, f2
         jl.a3, jl.b3, jl.c3, jl.d3, jl.e3, jl.f3 = a3, b3, c3, d3, e3, f3
@@ -65,7 +63,7 @@ class HomotopyContinuationRectifier(Rectifier):
         jl.seval(script)
         # TODO: check if casting is the same as the one used in SymPy
         solutions = np.array([[complex(sol) for sol in sol_tuple]
-                        for sol_tuple in jl.complex_sols])
+                              for sol_tuple in jl.complex_sols])
         # real_solutions = np.array([ np.float64(sol) for sol in jl.real_sol])
         self.logger.info(f"Result: {solutions}")
         # self.logger.info(f"Real solutions: {real_solutions}")
@@ -79,5 +77,5 @@ class HomotopyContinuationRectifier(Rectifier):
 
     def _get_script(self, filename: str) -> str:
         path = os.path.join(os.path.dirname(__file__), filename)
-        script = open(path, "r").read()
+        script = open(path, "r", encoding="utf8").read()
         return script

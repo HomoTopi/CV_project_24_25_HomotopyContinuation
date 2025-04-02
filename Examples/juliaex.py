@@ -2,7 +2,8 @@
 try:
     import os
     import sys
-    sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+    import os
+    # os.environ["JULIA_LOAD_PATH"] = "C:\\Users\\Paolo\\AppData\\Local\\Programs\\Julia-1.11.4\\bin"
 except NameError:
     pass
 

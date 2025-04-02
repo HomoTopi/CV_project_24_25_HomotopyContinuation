@@ -3,7 +3,7 @@ import numpy as np
 import HomoTopiContinuation.Plotter.Plotter as Plotter
 import HomoTopiContinuation.SceneGenerator.scene_generator as sg
 import HomoTopiContinuation.Rectifier.standard_rectifier as sr
-# import HomoTopiContinuation.Rectifier.homotopyc_rectifier as hr
+import HomoTopiContinuation.Rectifier.homotopyc_rectifier as hr
 
 
 def sceneDefinition() -> sg.SceneDescription:
@@ -27,8 +27,8 @@ def main():
     img = sg.SceneGenerator.generate_scene(sceneDescription)
     print("[Scene Generated]")
 
-    rectifier = sr.StandardRectifier()
-    # rectifier = hr.HomotopyContinuationRectifier()
+    # rectifier = sr.StandardRectifier()
+    rectifier = hr.HomotopyContinuationRectifier()
     try:
         H_reconstructed = rectifier.rectify(img.C_img)
     except ValueError as e:
