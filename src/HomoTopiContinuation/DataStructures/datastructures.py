@@ -69,6 +69,11 @@ class Conic:
         """
         return Conic(H.inv().T @ self.M @ H.inv())
 
+    def get_non_zero_entry(self) -> tuple[int, int]:
+        """
+        Get the first non-zero entry of the conic matrix.
+        """
+        return np.nonzero(self.M)[0][0], np.nonzero(self.M)[1][0]
 
 class Conics:
     """
