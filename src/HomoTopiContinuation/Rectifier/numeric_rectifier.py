@@ -56,13 +56,9 @@ class NumericRectifier(Rectifier):
         #3rd step:
         
         C = B + (alpha * M_l)        
-        print(alpha)
-        print(M_l)
-        print(C)
         #4th step:
         # get the first non-zero entry of C
         non_zero_entry = np.nonzero(C)
-        print(non_zero_entry)
         if non_zero_entry:
             i, j = non_zero_entry[0][0], non_zero_entry[1][0]
         else:
