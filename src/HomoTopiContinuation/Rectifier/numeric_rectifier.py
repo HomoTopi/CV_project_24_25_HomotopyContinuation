@@ -1,7 +1,6 @@
 import numpy as np
 from numpy import linalg as la
 import logging
-from sympy import symbols, Eq, solve
 from HomoTopiContinuation.Rectifier.rectifier import Rectifier
 from HomoTopiContinuation.DataStructures.datastructures import Conics, Homography, Conic
 
@@ -48,18 +47,22 @@ class NumericRectifier(Rectifier):
         # TODO: search for the best submatrix (determinant is negative)
         #selected_index = self._get_best_submatrix(B)
         
-    
-        alpha = (1/l[0,2]) * np.sqrt(-np.linalg.det(B[0:2, 0:2]))
+        print(B)
+        print(B[0:2, 0:2])
+        alpha = (1/l[0,2]) * np.sqrt(-la.det(B[0:2, 0:2]))
 
         assert alpha > self.treshold, "The selected submatrix is singular"        
         
         #3rd step:
         
         C = B + (alpha * M_l)        
-        
+        print(alpha)
+        print(M_l)
+        print(C)
         #4th step:
         # get the first non-zero entry of C
         non_zero_entry = np.nonzero(C)
+        print(non_zero_entry)
         if non_zero_entry:
             i, j = non_zero_entry[0][0], non_zero_entry[1][0]
         else:
@@ -78,7 +81,7 @@ class NumericRectifier(Rectifier):
         M_l = 
         [0 tau -mu]
         [-tau 0 lambda]
-        [-mu -lambda 0]
+        [mu -lambda 0]
         """
         
         assert l.shape == (1, 3), "Line must be a 1x3 numpy array"
@@ -90,7 +93,7 @@ class NumericRectifier(Rectifier):
         return np.array([
             [0, tau, -mu],
             [-tau, 0, lam],
-            [-mu, -lam, 0]
+            [mu, -lam, 0]
         ])
 
     def _get_best_submatrix(self, B: np.ndarray) -> np.ndarray:
