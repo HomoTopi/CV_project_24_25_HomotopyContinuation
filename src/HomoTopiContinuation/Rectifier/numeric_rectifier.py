@@ -35,7 +35,7 @@ class NumericRectifier(Rectifier):
         
         assert  l.shape == (1, 3), "Line must be a 1x3 numpy array"
 
-        assert l[0,2] != 0, "input line lies at the infinity!"
+        #assert l[0,2] != 0, "input line lies at the infinity!"
         
         M_l = self._get_M_l(l)
         
@@ -49,9 +49,21 @@ class NumericRectifier(Rectifier):
         
         print(B)
         print(B[0:2, 0:2])
-        alpha = (1/l[0,2]) * np.sqrt(-la.det(B[0:2, 0:2]))
+        
+        # TODO: check if this is correct in case of l[0,2] = 0
+        det = la.det(B[0:2, 0:2])
+        if det > 0:
+            sqrt_det = (1j * np.sqrt(abs(det))) 
+        else:
+            sqrt_det = np.sqrt(-det)
+            
+        if l[0,2] > 0:
+            alpha = (1/l[0,2]) * sqrt_det
+        else:
+            alpha = sqrt_det
 
-        assert alpha > self.treshold, "The selected submatrix is singular"        
+        print(alpha)
+        assert np.linalg.norm(alpha) > self.treshold, "The selected submatrix is singular"        
         
         #3rd step:
         

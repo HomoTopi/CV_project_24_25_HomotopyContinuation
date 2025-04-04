@@ -13,17 +13,13 @@ def test_compute_conic_line_intersection():
     c1 = Circle(np.array([0, 0]), 1)
     conic = c1.to_conic()
     # create a line
-    # y = - x
-    line = np.array([1, 1, 1])
+    # y = - x - 10
+    line = np.array([1, 1, 10])
 
     intersection_points = numeric_rectifier._compute_conic_line_intersection(conic, line)
 
-    print(intersection_points)
+    assert abs(intersection_points[0].T @ conic.M @ intersection_points[0]) < 1e-10
+    assert abs(intersection_points[1].T @ conic.M @ intersection_points[1]) < 1e-10
 
-    assert intersection_points[0].T @ conic.M @ intersection_points[0] == 0
-    assert intersection_points[1].T @ conic.M @ intersection_points[1] == 0
-
-    print("The intersection points are on the conic")
-    
     
 
