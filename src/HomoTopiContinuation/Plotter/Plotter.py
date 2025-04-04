@@ -79,7 +79,7 @@ class Plotter:
         """
         self.ax.legend()
 
-    def new3DAxis(self, title="", axisSame=True):
+    def new3DAxis(self, title=""):
         """
         Create a new 3D axis. The new axis will be set as the current axis for subsequent plots.
 
@@ -98,15 +98,26 @@ class Plotter:
             projection='3d')
         self.ax.set_title(title)
         self.plotNumber += 1
-        if axisSame:
-            # Set the axis to have the same scale
-            self.ax.set_box_aspect([1, 1, 1])
 
         self.ax.set_xlabel('X')
         self.ax.set_ylabel('Y')
         self.ax.set_zlabel('Z')
 
         self.dimention = 3
+
+    def scaleAxis3D(self):
+        """
+        Scale the 3D axis to have the same scale.
+        """
+        if (self.dimention != 3):
+            raise ValueError("The current axis is not 3D.")
+        limits = np.array(
+            [self.ax.get_xlim3d(), self.ax.get_ylim3d(), self.ax.get_zlim3d()])
+        center = np.mean(limits, axis=1)
+        radius = 0.5 * np.max(np.abs(limits[:, 1] - limits[:, 0]))
+        self.ax.set_xlim3d([center[0] - radius, center[0] + radius])
+        self.ax.set_ylim3d([center[1] - radius, center[1] + radius])
+        self.ax.set_zlim3d([center[2] - radius, center[2] + radius])
 
     def plotConic2D(self, conic: Conic, x_range=(-1, 1, 100), y_range=(-1, 1, 100), conicName='Conic', color='r'):
         """
@@ -328,7 +339,7 @@ class Plotter:
         self.drawLegend()
 
         # Second plot (in the middle)
-        self.new3DAxis(title="3D Scene", axisSame=True)
+        self.new3DAxis(title="3D Scene")
         self.plotCamera()
         self.drawReferenceFrame(sceneDescription)
         self.plotCircle3D(sceneDescription.circle1,
@@ -338,6 +349,7 @@ class Plotter:
         self.plotCircle3D(sceneDescription.circle3,
                           sceneDescription, color=colorC3, name="Circle 3")
         self.drawLegend()
+        self.scaleAxis3D()
 
         # Third plot (on the right)
         self.newAxis(title="Rectified Image", axisSame=True)
