@@ -89,6 +89,7 @@ class Conic:
         """
         return np.nonzero(self.M)[0][0], np.nonzero(self.M)[1][0]
 
+
 class Conics:
     """
     A data structure containing three conics.
@@ -120,7 +121,7 @@ class Conics:
             tuple: The three conics (C1, C2, C3)
         """
         return self.C1, self.C2, self.C3
-    
+
     def __str__(self) -> str:
         """
         Return a string representation of the conics.
@@ -129,6 +130,12 @@ class Conics:
             str: String representation of the conics
         """
         return f"""C1:\n{self.C1.M}\nC2:\n{self.C2.M}\nC3:\n{self.C3.M}"""
+
+    def __iter__(self):
+        """
+        Return an iterator over the conics.
+        """
+        return iter([self.C1, self.C2, self.C3])
 
 
 class Circle:
@@ -230,10 +237,10 @@ class Homography:
         if np.abs(la.det(H)) < self.threshold:
             raise ValueError(
                 "Homography matrix must be invertible, det(H) = " + str(la.det(H)))
-            
+
         # set to 0 all the elements of H with a magnitude less than threshold
         H[np.abs(H) < self.threshold] = 0
-        
+
         # set to 0 all the real or imaginary parts of H with a magnitude less than threshold
         H = np.real_if_close(H, tol=self.threshold)
         self.H = H
