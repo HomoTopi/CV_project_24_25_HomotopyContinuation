@@ -7,4 +7,3 @@
 .vscode
 .venv
 .coverage
-*.log
