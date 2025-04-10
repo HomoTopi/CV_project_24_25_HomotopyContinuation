@@ -32,7 +32,7 @@ class Conic:
         if not np.allclose(M, M.T):
             raise ValueError("Conic matrix must be symmetric")
 
-        self.M = M
+        self._M = M
     
     @property
     def M(self) -> np.ndarray:  
@@ -42,7 +42,15 @@ class Conic:
         Returns:
             float: The conic matrix
         """
-        return self.M
+        return self._M
+    
+    @M.setter
+    def M(self, value):
+        """
+        Set the conic matrix.
+        """
+        self._M = value
+
     
     def to_algebraic_form(self) -> tuple:
         """
