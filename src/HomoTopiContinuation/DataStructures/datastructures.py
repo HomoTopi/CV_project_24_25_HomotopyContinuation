@@ -189,7 +189,7 @@ class SceneDescription:
         offset (numpy.ndarray): Offset of the camera from the origin
         circle1 (circle): First circle
         circle2 (circle): Second circle
-        cicrle3 (circle): Third circle
+        circle3 (circle): Third circle
     """
 
     def __init__(self, f: float, y_rotation: float, offset: np.ndarray, circle1: Circle, circle2: Circle, circle3: Circle):

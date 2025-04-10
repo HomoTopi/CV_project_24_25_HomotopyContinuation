@@ -1,5 +1,4 @@
 import numpy as np
-from numpy import linalg as la
 import logging
 from juliacall import Main as jl
 import juliapkg
@@ -19,6 +18,9 @@ class HomotopyContinuationRectifier(Rectifier):
     """
 
     def __init__(self):
+        """
+        Initialize the rectifier and set up the Julia environment.
+        """
         # add the HomotopyContinuation package
         juliapkg.add("HomotopyContinuation",
                      "f213a82b-91d6-5c5d-acf7-10f1c761b327")
@@ -29,7 +31,7 @@ class HomotopyContinuationRectifier(Rectifier):
 
     def rectify(self, C_img: Conics) -> Homography:
         """
-        Rectify a pair of conics using SymPy.
+        Rectify a pair of conics using the Julia Homotopy Continuation package.
 
         Args:
             C_img (Conics): A pair of conics in the image
@@ -72,11 +74,18 @@ class HomotopyContinuationRectifier(Rectifier):
 
         imDCCP = self.compute_imDCCP_from_solutions(solutions)
         H = self._compute_h_from_svd(imDCCP)
-        # H.H = H.H / H.H[2, 2]
 
         return H
 
     def _get_script(self, filename: str) -> str:
+        """"
+        Get the script from the given filename.
+
+        Args:
+            filename (str): The name of the script file
+        Returns:
+            str: The script as a string
+        """
         path = os.path.join(os.path.dirname(__file__), filename)
         script = open(path, "r", encoding="utf8").read()
         return script

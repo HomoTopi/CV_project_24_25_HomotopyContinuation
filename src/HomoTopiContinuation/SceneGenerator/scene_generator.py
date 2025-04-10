@@ -8,6 +8,9 @@ class SceneGenerator:
     Class for generating scenes.
 
     This class creates scenes from the given parameters.
+    It generates conics (circles) and computes the homography matrix
+    based on the scene description.
+    
     """
     @staticmethod
     def generate_scene(scene_description: SceneDescription) -> Img:

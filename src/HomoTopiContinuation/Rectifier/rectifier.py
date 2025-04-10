@@ -68,6 +68,9 @@ class Rectifier(ABC):
     def compute_imDCCP_from_solutions(self, sols: np.ndarray) -> np.ndarray:
         """
         Compute the image dual conic from the solutions of the conic equations.
+
+        Raises:
+            ValueError: If less than 2 complex solutions are found
         """
 
         assert len(sols.shape) >= 2, "Solutions must be at least 2!"

@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from HomoTopiContinuation.DataStructures.datastructures import Conics, Conic, Circle, SceneDescription, Img
+from HomoTopiContinuation.DataStructures.datastructures import Conic, Circle, Img
 from HomoTopiContinuation.Plotter.CameraPlotter import CameraPlotter
 import HomoTopiContinuation.SceneGenerator.scene_generator as sg
 import seaborn as sns
@@ -9,7 +9,7 @@ import seaborn as sns
 class Plotter:
     """
     A class for plotting both 2D and 3D plots.
-    There are methods to plot conics and cameras.
+    It contains methods to plot conics and cameras.
 
     To use the plotter, create a Plotter object specifying the number of plots in x and y directions and the figure size.
     For every plot first create a new axis using newAxis or new3DAxis methods.
@@ -35,7 +35,7 @@ class Plotter:
         self.maxPlots = nPlotsx * nPlotsy
         self.nPlotsx = nPlotsx
         self.nPlotsy = nPlotsy
-        self.dimention = 2
+        self.dimension = 2
 
     def getCurrentAxis(self) -> plt.Axes:
         """
@@ -71,7 +71,7 @@ class Plotter:
         self.ax.set_aspect('equal', adjustable='datalim')
         if axisSame:
             self.ax.axis('equal')
-        self.dimention = 2
+        self.dimension = 2
 
     def drawLegend(self):
         """
@@ -103,13 +103,16 @@ class Plotter:
         self.ax.set_ylabel('Y')
         self.ax.set_zlabel('Z')
 
-        self.dimention = 3
+        self.dimension = 3
 
     def scaleAxis3D(self):
         """
         Scale the 3D axis to have the same scale.
+
+        Raises:
+            ValueError: If the current axis is not 3D
         """
-        if (self.dimention != 3):
+        if (self.dimension != 3):
             raise ValueError("The current axis is not 3D.")
         limits = np.array(
             [self.ax.get_xlim3d(), self.ax.get_ylim3d(), self.ax.get_zlim3d()])
@@ -134,7 +137,7 @@ class Plotter:
             ValueError: If the current axis is not 2D
         """
 
-        if (self.dimention != 2):
+        if (self.dimension != 2):
             raise ValueError("The current axis is not 2D.")
         a, b, c, d, e, f = conic.to_algebraic_form()
 
@@ -159,8 +162,11 @@ class Plotter:
             size (float): The size of the camera
             color (str): The color of the camera
             bodyRatio (float): The ratio of the body the ratio between the body height and the body width, default 0.5
+        
+        Raises:
+            ValueError: If the current axis is not 3D
         """
-        if (self.dimention != 3):
+        if (self.dimension != 3):
             raise ValueError("The current axis is not 3D.")
         camera = CameraPlotter(center, yaw, pitch, roll,
                                size, color, bodyRatio)
@@ -177,13 +183,13 @@ class Plotter:
             y_range (tuple, optional): The range of y values expressed as (start, end, number of points). Defaults to (-1, 1, 100).
             conicName (str, optional): The name of the conic. Defaults to 'Conic'.
             color (str, optional): The color of the plot. Defaults to 'r'.
-            tol (_type_, optional): The tolerance for the plot
+            tol (float, optional): The tolerance for the plot
             mask. Points with Z values less than tol will be plotted. Defaults to 1e-2.
 
         Raises:
             ValueError: If the current axis is not 3D
         """
-        if (self.dimention != 3):
+        if (self.dimension != 3):
             raise ValueError("The current axis is not 3D.")
 
         a, b, c, d, e, f = conic.to_algebraic_form()
@@ -216,8 +222,11 @@ class Plotter:
             thetaResolution (int): The number of points to plot the circle
             color (str): The color of the circle
             name (str): The name of the circle
+
+        Raises:
+            ValueError: If the current axis is not 2D
         """
-        if (self.dimention != 2):
+        if (self.dimension != 2):
             raise ValueError("The current axis is not 2D.")
         theta = np.linspace(0, 2 * np.pi, thetaResolution)
         x = circle.center[0] + circle.radius * np.cos(theta)
@@ -238,8 +247,11 @@ class Plotter:
             thetaResolution (int): The number of points to plot the circle
             color (str): The color of the circle
             name (str): The name of the circle
+
+        Raises:
+            ValueError: If the current axis is not 3D
         """
-        if (self.dimention != 3):
+        if (self.dimension != 3):
             raise ValueError("The current axis is not 3D.")
         theta = np.linspace(0, 2 * np.pi, thetaResolution)
         x = circle.center[0] + circle.radius * np.cos(theta)
@@ -262,8 +274,11 @@ class Plotter:
             size (float): The size of the reference frame
             colorX (str): The color of the X axis
             colorY (str): The color of the Y axis
+        
+        Raises:
+            ValueError: If the current axis is not 3D
         """
-        if (self.dimention != 3):
+        if (self.dimension != 3):
             raise ValueError("The current axis is not 3D.")
         referenceMatrix = sg.SceneGenerator.compute_reference_matrix(
             sceneDescription)
@@ -325,6 +340,9 @@ class Plotter:
             colorC2 (str, optional): The color for the plotting of the second conic. Defaults to 'g'.
             colorC3 (str, optional): The color for the plotting of the third conic. Defaults to 'b'.
             name (str, optional): The name of the scene. Defaults to 'Scene'.
+
+        Raises:
+            ValueError: If the maximum number of plots is reached
         """
 
         if (self.plotNumber + 2 > self.maxPlots):
@@ -369,12 +387,12 @@ class Plotter:
 
 
 if __name__ == "__main__":
-    # Define the circle
+    # Define the circles
     c1 = Circle(np.array([0, 0]), 1)
     c2 = Circle(np.array([0.5, 0]), 1)
     c3 = Circle(np.array([0, 0.5]), 1)
 
-    # Second plot (on the right)
+    # Define the scene description
     sd = sg.SceneDescription(1, 30, np.array([0, 0, 2]), c1, c2, c3)
 
     # Generate Image
