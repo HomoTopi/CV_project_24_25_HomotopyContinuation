@@ -144,6 +144,23 @@ class Conics:
         Return an iterator over the conics.
         """
         return iter([self.C1, self.C2, self.C3])
+    def to_json(self):
+        """
+        Convert the Conics object to a JSON serializable format.
+        """
+        return {
+            "C1": self.C1.M.tolist(),
+            "C2": self.C2.M.tolist(),
+            "C3": self.C3.M.tolist()
+        }
+    def from_json(json_str):
+        """
+        Create a Conics object from a JSON string.
+        """
+        json_str['C1'] = np.array(json_str['C1'])
+        json_str['C2'] = np.array(json_str['C2'])
+        json_str['C3'] = np.array(json_str['C3'])
+        return Conics(Conic(json_str['C1']), Conic(json_str['C2']), Conic(json_str['C3']))
 
 
 class Circle:
@@ -218,6 +235,48 @@ class SceneDescription:
         self.circle3 = circle3
         self.offset = offset
 
+    def from_json(json_str) -> 'SceneDescription':
+        """
+        Create a SceneDescription object from a JSON string.
+        """
+        json_str['offset'] = np.array(json_str['offset'])
+        json_str['circle1'] = Circle(np.array(json_str['circle1']['center']), json_str['circle1']['radius'])
+        json_str['circle2'] = Circle(np.array(json_str['circle2']['center']), json_str['circle2']['radius'])
+        json_str['circle3'] = Circle(np.array(json_str['circle3']['center']), json_str['circle3']['radius'])
+        json_str['f'] = float(json_str['f'])
+        json_str['y_rotation'] = float(json_str['y_rotation'])
+
+        return SceneDescription(
+            json_str['f'],
+            json_str['y_rotation'],
+            json_str['offset'],
+            json_str['circle1'],
+            json_str['circle2'],
+            json_str['circle3']
+        )
+    
+    def to_json(self) -> dict:
+        """
+        Convert the SceneDescription object to a JSON serializable format.
+        """
+        return {
+            "f": self.f,
+            "y_rotation": self.y_rotation,
+            "offset": self.offset.tolist(),
+            "circle1": {
+                "center": self.circle1.center.tolist(),
+                "radius": self.circle1.radius
+            },
+            "circle2": {
+                "center": self.circle2.center.tolist(),
+                "radius": self.circle2.radius
+            },
+            "circle3": {
+                "center": self.circle3.center.tolist(),
+                "radius": self.circle3.radius
+            }
+        }
+
 
 class Homography:
     """
@@ -291,6 +350,20 @@ class Homography:
             Homography: The result of the multiplication
         """
         return Homography(self.H @ other.H)
+    def to_json(self):
+        """
+        Convert the Homography object to a JSON serializable format.
+        """
+        return {
+            "H": self.H.tolist()
+        }
+
+    def from_json(json_str) -> 'Homography':
+        """
+        Create a Homography object from a JSON string.
+        """
+        json_str['H'] = np.array(json_str['H'])
+        return Homography(json_str['H'])
 
 
 class Img:
@@ -312,3 +385,25 @@ class Img:
         """
         self.h_true = h_true
         self.C_img = C_img
+
+    def to_json(self):
+        """"
+        Convert the Img object to a JSON serializable format.
+        """
+        return {
+            "h_true": self.h_true.H.tolist(),
+            "C_img": {
+                "C1": self.C_img.C1.M.tolist(),
+                "C2": self.C_img.C2.M.tolist(),
+                "C3": self.C_img.C3.M.tolist()
+            }
+        }
+    def from_json(json_str):
+        """
+        Create an Img object from a JSON string.
+        """
+        json_str['h_true'] = np.array(json_str['h_true'])
+        json_str['C_img']['C1'] = np.array(json_str['C_img']['C1'])
+        json_str['C_img']['C2'] = np.array(json_str['C_img']['C2'])
+        json_str['C_img']['C3'] = np.array(json_str['C_img']['C3'])
+        return Img(Homography(json_str['h_true']), Conics(Conic(json_str['C_img']['C1']), Conic(json_str['C_img']['C2']), Conic(json_str['C_img']['C3'])))
