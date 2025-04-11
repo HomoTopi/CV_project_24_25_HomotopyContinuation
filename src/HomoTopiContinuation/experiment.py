@@ -4,6 +4,7 @@ import HomoTopiContinuation.Plotter.Plotter as Plotter
 import HomoTopiContinuation.SceneGenerator.scene_generator as sg
 import HomoTopiContinuation.Rectifier.standard_rectifier as sr
 import HomoTopiContinuation.Rectifier.homotopyc_rectifier as hr
+from HomoTopiContinuation.Losser.CircleLosser import CircleLosser
 from enum import Enum
 
 
@@ -27,13 +28,14 @@ def sceneDefinition() -> sg.SceneDescription:
 
 
 def main():
+    rectifier = Rectifiers.homotopy.value
+    losser = CircleLosser
+
     sceneDescription = sceneDefinition()
     print("[Scene Described]")
 
     img = sg.SceneGenerator.generate_scene(sceneDescription)
     print("[Scene Generated]")
-
-    rectifier = Rectifiers.homotopy.value
 
     try:
         H_reconstructed = rectifier.rectify(img.C_img)
@@ -52,6 +54,12 @@ def main():
     C2_reconstructed = img.C_img.C2.applyHomography(H_reconstructed)
     C3_reconstructed = img.C_img.C3.applyHomography(H_reconstructed)
 
+    # Compute the loss
+    loss = losser.computeCircleLoss(sceneDescription, img.C_img)
+    print("Loss:")
+    print(loss)
+
+    # Plot the results
     plotter = Plotter.Plotter(2, 2, title="Experiment")
 
     plotter.plotScene(sceneDescription, img)

@@ -5,6 +5,12 @@ from numpy import linalg as la
 class Conic:
     """
     Representation of a conic section using a 3x3 symmetric matrix.
+    A conic with algebraic form given by ax² + bxy + cy² + dx + ey + f = 0
+    is represented as the matrix
+
+    a b/2 d/2
+    b/2 c e/2
+    d/2 e/2 f
 
     Attributes:
         M (numpy.ndarray): A 3x3 symmetric matrix representing the conic
@@ -26,18 +32,33 @@ class Conic:
         if not np.allclose(M, M.T):
             raise ValueError("Conic matrix must be symmetric")
 
-        self.M = M
+        self._M = M
+    
+    @property
+    def M(self) -> np.ndarray:  
+        """
+        Return the conic matrix.
 
-    def to_algebraic_form(self):
+        Returns:
+            float: The conic matrix
+        """
+        return self._M
+    
+    @M.setter
+    def M(self, value):
+        """
+        Set the conic matrix.
+        """
+        self._M = value
+
+    
+    def to_algebraic_form(self) -> tuple:
         """
         Convert from matrix form to algebraic parameters form.
 
         Returns:
             tuple: The algebraic coefficients (a, b, c, d, e, f) where
                   the conic equation is ax² + bxy + cy² + dx + ey + f = 0
-                  a b/2 d/2
-                  b/2 c e/2
-                  d/2 e/2 f
         """
         return (
             self.M[0, 0],         # a
@@ -48,7 +69,8 @@ class Conic:
             self.M[2, 2]          # f
         )
 
-    def __call__(self):
+    
+    def __call__(self) -> np.ndarray :
         """
         Return the conic matrix.
 
@@ -59,7 +81,7 @@ class Conic:
 
     def applyHomography(self, H: 'Homography') -> 'Conic':
         """
-        Apply a homography to the circle.
+        Apply a homography to the conic.
 
         Args:
             H (Homography): The homography
@@ -75,9 +97,10 @@ class Conic:
         """
         return np.nonzero(self.M)[0][0], np.nonzero(self.M)[1][0]
 
+
 class Conics:
     """
-    A pair of conics.
+    A data structure containing three conics.
 
     Attributes:
         C1 (Conic): First conic
@@ -87,7 +110,7 @@ class Conics:
 
     def __init__(self, C1: Conic, C2: Conic, C3: Conic):
         """
-        Initialize a Conics object with two conics.
+        Initialize a Conics object with three conics.
 
         Args:
             C1 (Conic): First conic
@@ -98,20 +121,29 @@ class Conics:
         self.C2 = C2
         self.C3 = C3
 
-    def __call__(self):
+    def __call__(self) -> tuple:
         """
-        Return the pair of conics.
+        Return the three conics.
 
         Returns:
-            tuple: The pair of conics (C1, C2, C3)
+            tuple: The three conics (C1, C2, C3)
         """
         return self.C1, self.C2, self.C3
-    
-    def __str__(self):
+
+    def __str__(self) -> str:
         """
-        Return a string representation of the pair of conics.
+        Return a string representation of the conics.
+
+        Returns:
+            str: String representation of the conics
         """
         return f"""C1:\n{self.C1.M}\nC2:\n{self.C2.M}\nC3:\n{self.C3.M}"""
+
+    def __iter__(self):
+        """
+        Return an iterator over the conics.
+        """
+        return iter([self.C1, self.C2, self.C3])
 
 
 class Circle:
@@ -123,17 +155,20 @@ class Circle:
             center (numpy.ndarray): The center of the circle
             radius (float): The radius of the circle
         Raises:
-            ValueError: If the radius is negative
+            ValueError: If the radius is not positive
         """
-        if radius < 0:
+        if radius <= 0:
             raise ValueError("Circle radius must be positive")
 
         self.center = center
         self.radius = radius
 
-    def to_conic(self):
+    def to_conic(self) -> 'Conic':
         """
         Convert the circle to a conic.
+
+        Returns:
+            Conic: the representation of the circle as a conic
         """
         conic = np.array([
             [1, 0, -self.center[0]],
@@ -146,15 +181,15 @@ class Circle:
 
 class SceneDescription:
     """
-    Description of a scene with two circles and camera parameters.
+    Description of a scene with three circles and camera parameters.
 
     Attributes:
-        f (float): Focal length
-        y_rotation (float): Camera angle in degrees around the y-axis
+        f (float): Focal length of the camera
+        y_rotation (float): Camera rotation angle in degrees around the y-axis
         offset (numpy.ndarray): Offset of the camera from the origin
         circle1 (circle): First circle
         circle2 (circle): Second circle
-        cicrle3 (circle): Third circle
+        circle3 (circle): Third circle
     """
 
     def __init__(self, f: float, y_rotation: float, offset: np.ndarray, circle1: Circle, circle2: Circle, circle3: Circle):
@@ -162,13 +197,15 @@ class SceneDescription:
         Initialize a SceneDescription object.
 
         Args:
-            f (float): Focal length
-            y_rotation (float): Rotation angle around the y-axis in degrees 
+            f (float): Focal length of the camera
+            y_rotation (float): Camera rotation angle around the y-axis in degrees 
             offset (numpy.ndarray): Offset of the camera from the origin
             circle1 (Circle): Parameters of the first circle
             circle2 (Circle): Parameters of the second circle
             circle3 (Circle): Parameters of the third circle
-
+        
+        Raises:
+            ValueError: If the focal length is not a positive number, or if the offset vector does not have the expected shape.
         """
         if f <= 0:
             raise ValueError("Focal length must be positive")
@@ -187,15 +224,20 @@ class Homography:
     A homography transformation represented by a matrix.
 
     Attributes:
-        H (numpy.ndarray): The homography matrix, it should be a 3x3 invertible matrix
+        H (numpy.ndarray): The homography matrix, it must be a 3x3 invertible matrix
     """
 
     def __init__(self, H: np.ndarray, threshold: float = 1e-6):
         """
         Initialize a Homography object.
+        Set to 0 all the elements of H with a magnitude less than a threshold and
+        set to 0 all the real or imaginary parts of H with a magnitude less than threshold.
 
         Args:
             H (numpy.ndarray): The homography matrix
+        
+        Raises:
+            ValueError: If the homography matrix is not 3x3 or not invertible
         """
         self.threshold = threshold
         if (H.shape != (3, 3)):
@@ -203,10 +245,10 @@ class Homography:
         if np.abs(la.det(H)) < self.threshold:
             raise ValueError(
                 "Homography matrix must be invertible, det(H) = " + str(la.det(H)))
-            
+
         # set to 0 all the elements of H with a magnitude less than threshold
         H[np.abs(H) < self.threshold] = 0
-        
+
         # set to 0 all the real or imaginary parts of H with a magnitude less than threshold
         H = np.real_if_close(H, tol=self.threshold)
         self.H = H

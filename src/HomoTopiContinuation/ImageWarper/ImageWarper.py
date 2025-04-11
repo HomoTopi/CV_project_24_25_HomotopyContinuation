@@ -13,7 +13,7 @@ class ImageWarper:
         Warp an image using a homography matrix.
 
         Args:
-            img (_type_): The image to warp
+            img (numpy.ndarray): The image to warp
             H (Homography): The homography matrix
 
         Returns:

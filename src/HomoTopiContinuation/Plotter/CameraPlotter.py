@@ -17,7 +17,7 @@ class CameraPlotter:
             yaw (int, optional): The yaw angle of the camera in degrees. Defaults to 0.
             pitch (int, optional): The pitch angle of the camera in degrees. Defaults to 0.
             roll (int, optional): The roll angle of the camera in degrees. Defaults to 0.
-            size (float, optional): The size of the camera. It is the biggest dimention of the camera body. Defaults to 1.0.
+            size (float, optional): The size of the camera. It is the biggest dimension of the camera body. Defaults to 1.0.
             color (str, optional): The color of the camera plot. Defaults to 'blue'.
             bodyRatio (float, optional): The ratio between the body width and the body height. Defaults to 0.5.
         """
@@ -115,7 +115,7 @@ class CameraPlotter:
             [half_base, -half_base, height],   # Bottom-right corner
             [half_base, half_base, height],    # Top-right corner
             [-half_base, half_base, height],   # Top-left corner
-            [0, 0, 0]                # Apex
+            [0, 0, 0]                          # Apex
         ])
 
         # Apply rotation
@@ -148,6 +148,7 @@ class CameraPlotter:
     def plotCamera(self, ax: plt.Axes):
         """
         Plot the camera.
+        The camera is created as a combination of a cube and a pyramid.
 
         Args:
             ax (plt.Axes): The axis to plot the camera on
