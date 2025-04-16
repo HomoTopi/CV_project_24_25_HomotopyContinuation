@@ -95,11 +95,15 @@ class NumericRectifier(Rectifier):
         The result is the intersection points of all the conics.
         Args:
             intersection_points: Array of intersection points
-        """       
+        """
+        # TODO: would be nice having a treshold for considering a point as same as another one       
         # First identify which points appear more than once
         _, inverse_indices, counts = np.unique(intersection_points, axis=0, return_inverse=True, return_counts=True)
         # Create a mask for points that appear more than once
         mask = counts[inverse_indices] > 1
+        # if mask is empty, return the intersection points
+        if not mask.any():
+            return intersection_points
         # Filter the original array
         filtered_points = np.unique(intersection_points[mask], axis=0)
         return filtered_points
