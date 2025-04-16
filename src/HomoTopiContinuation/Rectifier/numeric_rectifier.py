@@ -58,25 +58,21 @@ class NumericRectifier(Rectifier):
             # Using Pierlugi Taddei's Conic Intersection implementation
             
             #NB in this case just 2 conics are sufficient to get the image of the circular points
-            result = eng.intersectConics(C1_matlab, C2_matlab)            
+            result = eng.intersectConics(C1_matlab, C2_matlab)
+            # transpose the result to be a 2x3 matrix
+            result = np.array(result).T
             result2 = eng.intersectConics(C1_matlab, C3_matlab)
+            result2 = np.array(result2).T
             result3 = eng.intersectConics(C2_matlab, C3_matlab)
+            result3 = np.array(result3).T
+
+            intersection_points = np.concatenate((result, result2, result3), axis=0)
+            # set to 0 elements inside the array under a treshold
+            intersection_points = self._clear_found_intersection_points(intersection_points)
+            filtered_points = self._get_common_intersection_points(intersection_points)
             
-            intersection_points = np.concatenate((result, result2), axis=0)
-            intersection_points = np.concatenate((intersection_points, result3), axis=0)
             
-            # TODO: get only the complex intersection points
-            
-            # Convert back to a list or array if needed
-            #intersection_points = np.intersect1d(result, result2)
-            #intersection_points = np.intersect(intersection_points, result3)
-            
-            # TODO: set to 0 values under a treshold
-            #distances = np.linalg.norm(intersection_points, axis=1)  # Calculate distances from the origin
-            #intersection_points[distances < self.treshold] = 0.0 
-                
-            #print("intersection_points: \n", intersection_points)
-            
+            print("filtered_points: \n", filtered_points)
             # Compute the rectifying homography from the intersection points
             # This will depend on the specific algorithm implementation
             # Compute the rectifying homography from the intersection points
@@ -97,6 +93,43 @@ class NumericRectifier(Rectifier):
         finally:
             # Close MATLAB engine
             eng.quit()
+            
+    
+    def _get_common_intersection_points(self, intersection_points):
+        """
+        Filter unique intersection points.
+        The result is the intersection points of all the conics.
+        Args:
+            intersection_points: Array of intersection points
+        """       
+        # First identify which points appear more than once
+        _, inverse_indices, counts = np.unique(intersection_points, axis=0, return_inverse=True, return_counts=True)
+        # Create a mask for points that appear more than once
+        mask = counts[inverse_indices] > 1
+        # Filter the original array
+        filtered_points = np.unique(intersection_points[mask], axis=0)
+        return filtered_points
+        
+    def _clear_found_intersection_points(self, intersection_points):
+        """
+        Sets to 0 the elements under a treshold and normalize the vector wrt to the third element or the first element (if w = 0)
+        
+        Args:
+            intersection_points: Array of intersection points"""
+        
+        intersection_points[np.abs(intersection_points) < self.treshold] = 0.0
+        
+        #remove imaginary parts if under the treshold
+        intersection_points = np.real_if_close(intersection_points, tol=self.treshold)
+          
+            
+        # for each row, normalize the vector wrt to the first element (if w = 0)
+        for i in range(len(intersection_points)):
+            if intersection_points[i,2] != 0:
+                intersection_points[i,:] = intersection_points[i,:] / intersection_points[i,2]
+            elif intersection_points[i,0] != 0:
+                intersection_points[i,:] = intersection_points[i,:] / intersection_points[i,0]
+        
     
     def _compute_homography_from_points(self, points):
         """
