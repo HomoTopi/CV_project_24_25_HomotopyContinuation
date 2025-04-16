@@ -9,7 +9,7 @@ f_2 = a2 * x^2 + b2 * x * y + c2 * y^2 + d2 * x * z + e2 * y * z + f2 * z^2
 f_3 = a3 * x^2 + b3 * x * y + c3 * y^2 + d3 * x * z + e3 * y * z + f3 * z^2
 
 F = System([f_1, f_2, f_3])
-res = solve(F, [x, y, z])
+res = solve(F, [x, y, z]; show_progress=false)
 sols = solutions(res; only_finite=true)
 
 normalized = [sol / (norm(sol[3]) < threshold ? sol[1] : sol[3]) for sol in sols]
