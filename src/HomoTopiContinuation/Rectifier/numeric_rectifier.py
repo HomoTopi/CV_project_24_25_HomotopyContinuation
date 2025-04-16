@@ -67,25 +67,19 @@ class NumericRectifier(Rectifier):
             result3 = np.array(result3).T
 
             intersection_points = np.concatenate((result, result2, result3), axis=0)
+            self.logger.info("intersection_points: \n", intersection_points)
             # set to 0 elements inside the array under a treshold
             intersection_points = self._clear_found_intersection_points(intersection_points)
             filtered_points = self._get_common_intersection_points(intersection_points)
             
-            
-            print("filtered_points: \n", filtered_points)
-            # Compute the rectifying homography from the intersection points
-            # This will depend on the specific algorithm implementation
-            # Compute the rectifying homography from the intersection points
-            # This will depend on the specific algorithm implementation
-            # For a standard approach:
-            # 1. Arrange the intersection points in a specific order
-            # 2. Map these points to a canonical position (e.g., unit circle)
-            
+            self.logger.info("filtered_points: \n", filtered_points)
+
             # Create a homography matrix based on the points
-            H = self._compute_homography_from_points(intersection_points)
-            
-            # Return as Homography object
-            return Homography(H)
+            imDCCP = self.compute_imDCCP_from_solutions(filtered_points)
+            H = self._compute_h_from_svd(imDCCP)
+            self.logger.info("H: \n", H.H)
+            return H
+
             
         except Exception as e:
             logging.error(f"Error in MATLAB conic intersection: {e}")
@@ -129,30 +123,5 @@ class NumericRectifier(Rectifier):
                 intersection_points[i,:] = intersection_points[i,:] / intersection_points[i,2]
             elif intersection_points[i,0] != 0:
                 intersection_points[i,:] = intersection_points[i,:] / intersection_points[i,0]
-        
-    
-    def _compute_homography_from_points(self, points):
-        """
-        Compute homography matrix from intersection points.
-        
-        Args:
-            points: Array of intersection points between conics
-            
-        Returns:
-            numpy.ndarray: 3x3 homography matrix
-        """
-        # Implementation depends on the specific algorithm
-        # This is a placeholder for the actual computation
-        
-        # Example implementation:
-        # 1. Arrange points in a specific order based on algorithm requirements
-        # 2. Compute the homography that maps these points to canonical positions
-        
-        # Simple placeholder
-        H = np.eye(3)
-        
-        # TODO: Implement actual homography computation based on
-        # the intersection of conics algorithm described in the reference
-        
-        return H
-    
+
+        return intersection_points
