@@ -26,55 +26,30 @@ class SceneGenerator:
             )
         self.logger = logging.getLogger(self.__class__.__name__)
 
-    @staticmethod
-    def generate_scene():
+    def generate_scene(self, scene_description) -> Img:
         """
         Construct the matrices of the two circles and the homography from the scene description.
         Apply the homography to the true conics (circles) to get the warped conics.
         """
-        logger = logging.getLogger("SceneGenerator")
 
-        # Load all scene descriptions from file
-        with open('src\\HomoTopiContinuation\\Data\\sceneDescription.json', 'r') as file:
-            data = json.load(file)  # list of sceneDescription JSON objects
+        # Convert circles to conics
+        C1_true = scene_description.circle1.to_conic()
+        C2_true = scene_description.circle2.to_conic()
+        C3_true = scene_description.circle3.to_conic()
 
-        all_images = []
+        # Compute the homography
+        H = SceneGenerator.compute_H(scene_description)
 
-        for scene_json in data:
-            scene_description = SceneDescription.from_json(scene_json)
+        # Apply homography to the true conics
+        C1 = C1_true.applyHomography(H)
+        C2 = C2_true.applyHomography(H)
+        C3 = C3_true.applyHomography(H)
 
-            # Convert circles to conics
-            C1_true = scene_description.circle1.to_conic()
-            C2_true = scene_description.circle2.to_conic()
-            C3_true = scene_description.circle3.to_conic()
 
-            logger.info(f"Circle 1: {C1_true.M}")
-            logger.info(f"Circle 2: {C2_true.M}")   
-            logger.info(f"Circle 3: {C3_true.M}")
+        conics = Conics(C1, C2, C3)
 
-            # Compute the homography
-            H = SceneGenerator.compute_H(scene_description)
-
-            logger.info(f"Homography matrix: {H.H}")
-
-            # Apply homography to the true conics
-            C1 = C1_true.applyHomography(H)
-            C2 = C2_true.applyHomography(H)
-            C3 = C3_true.applyHomography(H)
-
-            logger.info(f"Warped conic 1: {C1.M}")
-            logger.info(f"Warped conic 2: {C2.M}")
-            logger.info(f"Warped conic 3: {C3.M}")
-
-            conics = Conics(C1, C2, C3)
-
-            # Create the Img object and store its JSON
-            img = Img(H, conics)
-            all_images.append(img.to_json())
-
-        # Write all images to a single JSON file
-        with open('src\\HomoTopiContinuation\\Data\\sceneImage.json', 'w') as file:
-            json.dump(all_images, file, indent=4)
+        # Create the Img object and store its JSON
+        return Img(H, conics)
 
 
 
@@ -139,5 +114,14 @@ class SceneGenerator:
 
 if(__name__ == "__main__"):
     scene_generator = SceneGenerator()
-    scene_generator.generate_scene()
+    # Assuming scene_description is already defined
+    # scene_description = SceneDescription(...)  # Replace with actual scene description
+    # Call the generate_scene method
+    # scene_generator.generate_scene(scene_description)
+    # For demonstration, we will use dummy data
+    C1 = Circle(np.array([0, 0]), 1)
+    C2 = Circle(np.array([1, 1]), 1)
+    C3 = Circle(np.array([2, 2]), 1)
+    scene_description = SceneDescription(1, 45, np.array([0, 0]), C1, C2, C3)
+    scene_generator.generate_scene(scene_description)
     
