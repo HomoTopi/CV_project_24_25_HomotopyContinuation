@@ -51,19 +51,21 @@ function P = completeIntersection(E1,E2)
     ];
     
     r = roots(k);
+    %disp(r)
     m = [];
     
-    % Try all roots whether real or complex
-    for i = 1:length(r)
-        E0 = E1 + r(i)*E2;
-        [mi, li] = decomposeDegenerateConic(E0);
-        if ~isempty(mi)
-            m = mi;
-            l = li;
-            break;
-        end
+    if (isreal(r(1))) 
+        E0 = E1 + r(1)*E2;
+        [m l] = decomposeDegenerateConic(E0);
     end
-
+    if (isempty(m) && isreal(r(2)))
+        E0 = E1 + r(2)*E2;
+        [m l] = decomposeDegenerateConic(E0);
+    end   
+    if (isempty(m) && isreal(r(3)))
+        E0 = E1 + r(3)*E2;
+        [m l] = decomposeDegenerateConic(E0);
+    end
      if (isempty(m))
       %  disp('no intersecting lines detected');
         P = [];
@@ -73,4 +75,5 @@ function P = completeIntersection(E1,E2)
     P1 = intersectConicLine(E1,m);
     P2 = intersectConicLine(E1,l);
     P = [P1, P2];
+
 end

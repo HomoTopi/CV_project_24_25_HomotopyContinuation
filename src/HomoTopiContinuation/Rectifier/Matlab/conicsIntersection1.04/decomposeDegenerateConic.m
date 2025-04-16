@@ -22,7 +22,11 @@ else %rank 2: need to detect the correct rank 1 matrix
     [maxV di] = max(abs(diag(B)));
     i = di(1);
     
-    % Remove the B(i,i) < 0 check to allow complex decompositions
+    if (B(i,i) <0)
+        l = [];
+        m = [];
+        return;
+    end
     b = sqrt(B(i,i));  % This will be complex when B(i,i) < 0
     p = B(:,i)/b;
 
