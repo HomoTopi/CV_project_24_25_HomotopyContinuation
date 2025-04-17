@@ -11,28 +11,36 @@ from HomoTopiContinuation.ConicWarper.ConicWarper import ConicWarper
 from HomoTopiContinuation.Losser import AngleDistortionLosser, CircleLosser, FrobNormLosser, LinfLosser
 from HomoTopiContinuation.DataStructures.datastructures import Circle, SceneDescription, Img, Homography, Conics
 
-# class Rectifiers(Enum):
-#     standard = sr.StandardRectifier()
-#     homotopy = hr.HomotopyContinuationRectifier()
-
 
 class ExperimentHandler:
+    """
+    Class to handle the experiment pipeline.
+    """
     def __init__(self):
+        """
+        Initialize the ExperimentHandler class.
+        Initialize the scene generator, conic warper, and rectifiers.
+        """
         self.scene_generator = SceneGenerator()
         self.conic_warper = ConicWarper()   
         self.standard_rectifier = sr.StandardRectifier()
         self.homotopyc_rectifier = hr.HomotopyContinuationRectifier()
-        # self.rectifiers = {
-        #     "standard": standard_rectifier,
-        #     "homotopy": homotopyc_rectifier
-        # }
+        self.rectifiers = {
+            "standard": self.standard_rectifier,
+            "homotopy": self.homotopyc_rectifier
+        }
         return
     
-    def runExperiment(self, path):
-        f_range, y_rotation_range, offset_range, circle1_centers, circle1_radii, circle2_centers, circle2_radii, circle3_centers, circle3_radii = self.sceneDefinition()    
-        self.generateSceneDescriptionJson(f_range, y_rotation_range, offset_range, circle1_centers, circle1_radii, circle2_centers, circle2_radii, circle3_centers, circle3_radii, path)
+    def runExperiment(self, path, path_scene):
+        """
+        Run the experiment pipeline.
+        """
+        #TODO: resilience to errors in the pipeline
+        scene = self.sceneDefinition(path, path_scene)
+        self.generateSceneDescriptionJson(scene, path)
+        print("sceneDescription.json generated")
         self.sceneGeneration(path)
-        self.rectify(path)
+        self.rectify(path, scene[-1])
         self.warpConics(path)
         self.computeLosses(path)
         self.json_to_df(path)
@@ -40,7 +48,7 @@ class ExperimentHandler:
     
     def computeLosses(self, path):
         """
-        Compute the losses for the given scene and homography.
+        Compute the losses for the given scenes and homographies.
         """
         with open(path + '/sceneDescription.json', 'r') as file:
             scene_data = json.load(file)
@@ -78,7 +86,7 @@ class ExperimentHandler:
     
     def extractFields(self, scene, image, homography, conics, losses):
         """
-        Extract interesting fields from the JSON files in order to create a significant dataframe.
+        Method to extract signicative fields from the JSON files in order to create the output dataframe.
         """
         return {
             "circle1Center:": scene["circle1"]["center"],
@@ -106,7 +114,7 @@ class ExperimentHandler:
     
     def json_to_df(self, path):
         """
-        Create a pandas dataframe from the JSON files with our resultsand save it to a CSV file.
+        Create a pandas dataframe from the JSON files with our results and save it to a CSV file.
         """
         json_sources = [
         ("scene", path + "/sceneDescription.json"),
@@ -153,7 +161,7 @@ class ExperimentHandler:
 
     def warpConics(self, path):
         """
-        Warp the conics using the reconstructed homography matrix for all the scenes present inn the json file.
+        Warp the conics using the reconstructed homography matrix for all the scenes.
         """
         with open(path + "/sceneImage.json", "r") as file:
             data = json.load(file)
@@ -171,90 +179,41 @@ class ExperimentHandler:
         with open(path + '/rectifiedConics.json', 'w') as file:
             json.dump([conic for conic in rectified_conics], file, indent=4)
     
-    def rectify(self, path):
+    def rectify(self, path, rectifier: str):
         """
-        Rectify the homography for all the scenes present in the json file.
+        Rectify the images using the specified rectifier.
         """
-        with open(path + "sceneImage.json", "r") as file:
+        rectifier = self.rectifiers.get(rectifier)
+        with open(path + "/sceneImage.json", "r") as file:
             data = json.load(file)  # This is now a list of Img JSONs
 
         rectified_homographies = []
 
-        for img_json in tqdm(data, desc="Rectifying homographies"):
+        for img_json in tqdm(data, desc="Rectifying scenes"):
             img = Img.from_json(img_json)
             C_img = img.C_img
-            H = self.homotopyc_rectifier.rectify(C_img)
+            H = rectifier.rectify(C_img)
             rectified_homographies.append(H.to_json())
         
-        with open(path + 'rectifiedHomography.json', 'w') as file:
+        with open(path + '/rectifiedHomography.json', 'w') as file:
             json.dump(rectified_homographies, file, indent=4)
 
 
-    def generateSceneDescriptionJson(self, f_range, y_rotation_range, offset_range, circle1_centers, circle1_radii, circle2_centers, circle2_radii, circle3_centers, circle3_radii, path):
+    def generateSceneDescriptionJson(self, sceneDescription, path):
         """"
         Generate a JSON file with all combinations of the parameters.
         """
-        combinations = product(
+        (
             f_range,
             y_rotation_range,
             offset_range,
-            circle1_centers,
-            circle1_radii,
-            circle2_centers,
-            circle2_radii,
-            circle3_centers,
-            circle3_radii,
-        )
-        scenes = []
+            circle1_centers, circle1_radii,
+            circle2_centers, circle2_radii,
+            circle3_centers, circle3_radii,
+            rectifier
+        ) = sceneDescription
 
-        for combo in combinations:
-            (
-                f, y_rot, offset,
-                c1_center, c1_radius,
-                c2_center, c2_radius,
-                c3_center, c3_radius
-            ) = combo
-
-            circle1 = Circle(np.array(c1_center), c1_radius)
-            circle2 = Circle(np.array(c2_center), c2_radius)
-            circle3 = Circle(np.array(c3_center), c3_radius)
-            scene = SceneDescription(f, y_rot, np.array(offset), circle1, circle2, circle3)
-            scenes.append(scene.to_json())
-
-        with open(path + '/sceneDescription.json', 'w') as file:
-            json.dump(scenes, file, indent=4)
-
-    
-    def sceneDefinition(self):
-        # Scalar ranges
-        f_range = np.arange(1.0, 1.1, 0.1).tolist()
-        y_rotation_range = np.arange(0, 51, 25).tolist()
-
-        # Offset 3D range
-        x_vals = np.arange(0, 3, 1).tolist()
-        y_vals = np.arange(0, 3, 1).tolist()
-        z_vals = np.arange(1, 3, 1).tolist()
-        offset_range = [tuple(map(float, p)) for p in product(x_vals, y_vals, z_vals)]
-
-        # Circle 1
-        c1_x = np.arange(0, 0.2, 0.1).tolist()
-        c1_y = np.arange(0, 0.2, 0.1).tolist()
-        circle1_centers = [tuple(map(float, p)) for p in product(c1_x, c1_y)]
-        circle1_radii = np.arange(1, 2, 1).tolist()
-
-        # Circle 2
-        c2_x = np.arange(0.5, 0.7, 0.1).tolist()
-        c2_y = np.arange(0, 0.2, 0.1).tolist()
-        circle2_centers = [tuple(map(float, p)) for p in product(c2_x, c2_y)]
-        circle2_radii = np.arange(1, 2, 1).tolist()
-
-        # Circle 3
-        c3_x = np.arange(0, 0.2, 0.1).tolist()
-        c3_y = np.arange(0, 0.2, 0.1).tolist()
-        circle3_centers = [tuple(map(float, p)) for p in product(c3_x, c3_y)]
-        circle3_radii = np.arange(1.5, 2.1, 0.5).tolist()
-
-        return (
+        combinations = product(
             f_range,
             y_rotation_range,
             offset_range,
@@ -263,7 +222,93 @@ class ExperimentHandler:
             circle3_centers, circle3_radii
         )
 
+        scenes = []
+        for (
+            f, y_rot, offset,
+            c1_center, c1_radius,
+            c2_center, c2_radius,
+            c3_center, c3_radius
+        ) in combinations:
+
+            circle1 = Circle(np.array(c1_center), c1_radius)
+            circle2 = Circle(np.array(c2_center), c2_radius)
+            circle3 = Circle(np.array(c3_center), c3_radius)
+
+            scene = SceneDescription(
+                f, y_rot, np.array(offset),
+                circle1, circle2, circle3
+            )
+            scenes.append(scene.to_json())
+        output_path = f"{path}/sceneDescription.json"
+        with open(output_path, 'w') as file:
+            json.dump(scenes, file, indent=4)
+
+
+    def parse_range(self, range_list):
+        """
+        Parse a range list from the JSON file.
+
+        Raises:
+            ValueError: If step is 0.
+        """
+        start, stop, step = range_list
+        if step == 0 and start != stop:
+            raise ValueError(f"Invalid range: {range_list} (step cannot be 0)")
+        else:
+            step = 1
+        return np.arange(start, stop + step, step).tolist()
+
+
+    def sceneDefinition(self, path, path_scene) -> tuple:
+        """
+        Define the scene parameters for the experiment.
+        """
+        with open(path + path_scene, 'r') as file:
+            data = json.load(file)
+        # Scalar ranges
+        f_range = self.parse_range(data["f_range"])
+        y_rotation_range = self.parse_range(data["y_rotation_range"])
+
+        # Offset 3D range
+        offset_range_x = self.parse_range(data["offset_range_x"])
+        offset_range_y = self.parse_range(data["offset_range_y"])
+        offset_range_z = self.parse_range(data["offset_range_z"])
+        offset_range = [tuple(map(float, p)) for p in product(offset_range_x, offset_range_y, offset_range_z)]
+
+        # Circle 1
+        c1_centre_x_range = self.parse_range(data["c1_centre_x_range"])
+        c1_centre_y_range = self.parse_range(data["c1_centre_y_range"])
+        c1_radius_range = self.parse_range(data["c1_radius_range"])
+        circle1_centers = [tuple(map(float, p)) for p in product(c1_centre_x_range, c1_centre_y_range)]
+
+        # Circle 2
+        c2_centre_x_range = self.parse_range(data["c2_centre_x_range"])
+        c2_centre_y_range = self.parse_range(data["c2_centre_y_range"])
+        c2_radius_range = self.parse_range(data["c2_radius_range"])
+        circle2_centers = [tuple(map(float, p)) for p in product(c2_centre_x_range, c2_centre_y_range)]
+
+
+        # Circle 3
+        c3_centre_x_range = self.parse_range(data["c3_centre_x_range"])
+        c3_centre_y_range = self.parse_range(data["c3_centre_y_range"])
+        c3_radius_range = self.parse_range(data["c3_radius_range"])
+        circle3_centers = [tuple(map(float, p)) for p in product(c3_centre_x_range, c3_centre_y_range)]
+
+        rectifier = "homotopy"  # or "standard"
+
+        return (
+            f_range,
+            y_rotation_range,
+            offset_range,
+            circle1_centers, c1_radius_range,
+            circle2_centers, c2_radius_range,
+            circle3_centers, c3_radius_range,
+            rectifier
+            )
+
+    
+
 if __name__ == "__main__":
     experiment_handler = ExperimentHandler()
     path = "src/HomoTopiContinuation/Data/"  # Replace with your actual path
-    experiment_handler.runExperiment(path)
+    experiment_handler.runExperiment(path, "/scene.json")
