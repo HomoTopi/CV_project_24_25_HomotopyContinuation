@@ -1,0 +1,34 @@
+
+services:
+  julia-rectifier:
+    build:
+      context: ./Julia
+      dockerfile: Dockerfile.julia
+    container_name: julia_rectifier_service
+    ports:
+      - "8081:8081" # Map host port 8081 to container port 8081
+    restart: unless-stopped
+    # Add healthcheck
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s # Give Julia time to start and compile
+
+# Usage examples:
+# 
+# 1. Build and start the service:
+#    docker-compose up -d
+#
+# 2. Example API call:
+#    curl -X POST http://localhost:8081/rectify \
+#      -H "Content-Type: application/json" \
+#      -d '{"conics": [
+#            [1.0, 0.0, 1.0, 0.0, 0.0, -1.0],
+#            [1.0, 0.0, 0.0, 0.0, 0.0, -1.0],
+#            [0.0, 0.0, 1.0, 0.0, 0.0, -1.0]
+#          ]}'
+#
+# 3. Check service health:
+#    curl http://localhost:8081/health 
