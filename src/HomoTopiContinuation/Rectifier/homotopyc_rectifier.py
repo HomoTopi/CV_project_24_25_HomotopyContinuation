@@ -1,9 +1,8 @@
 import numpy as np
 import logging
-from juliacall import Main as jl
-import juliapkg
 import os
-
+import requests
+import json
 
 from HomoTopiContinuation.DataStructures.datastructures import Conics, Homography
 from .rectifier import Rectifier
@@ -21,12 +20,11 @@ class HomotopyContinuationRectifier(Rectifier):
         """
         Initialize the rectifier and set up the Julia environment.
         """
-        # add the HomotopyContinuation package
-        juliapkg.add("HomotopyContinuation",
-                     "f213a82b-91d6-5c5d-acf7-10f1c761b327")
-        juliapkg.resolve()
-
-        # call the __init__ of the parent class
+        DOMAIN = "localhost"
+        PORT = 8081
+        SERVICE = "rectify"
+        
+        self.service_url = f"http://{DOMAIN}:{PORT}/{SERVICE}"
         super().__init__()
 
     def rectify(self, C_img: Conics) -> Homography:
@@ -58,20 +56,31 @@ class HomotopyContinuationRectifier(Rectifier):
         self.logger.info(
             f"Equation 3: {a3}*x^2 + {b3}*x*y + {c3}*y^2 + {d3}*x*w + {e3}*y*w + {f3}*w^2")
 
-        jl.a1, jl.b1, jl.c1, jl.d1, jl.e1, jl.f1 = a1, b1, c1, d1, e1, f1
-        jl.a2, jl.b2, jl.c2, jl.d2, jl.e2, jl.f2 = a2, b2, c2, d2, e2, f2
-        jl.a3, jl.b3, jl.c3, jl.d3, jl.e3, jl.f3 = a3, b3, c3, d3, e3, f3
-
-        jl.seval(script)
+     
+        data = {
+            "conics": [
+                [a1, b1, c1, d1, e1, f1],
+                [a2, b2, c2, d2, e2, f2],
+                [a3, b3, c3, d3, e3, f3]
+            ]
+        }
+        
+        headers = {"Content-Type": "application/json"}
+        
+        response = requests.post(self.service_url, headers=headers, data=json.dumps(data))
+        
+        if response.status_code != 200:
+            raise Exception(f"API call failed: {response.json()}")
+        
+        solutions = response.json()["complex_sols"]
+        
+        self.logger.info(f"Solutions: {solutions}")
         # TODO: check if casting is the same as the one used in SymPy
-        solutions = np.array([[complex(sol) for sol in sol_tuple]
-                              for sol_tuple in jl.complex_sols])
-        # real_solutions = np.array([ np.float64(sol) for sol in jl.real_sol])
+        solutions = np.array([[complex(sol["re"], sol["im"]) for sol in sol_tuple]
+                              for sol_tuple in solutions])
+        
         self.logger.info(f"Result: {solutions}")
-        # self.logger.info(f"Real solutions: {real_solutions}")
-        # TODO: extract the intersection points from the result
-        # TODO: compute the rectification homography both by svd and by a fully homotopy continuation approach
-
+ 
         imDCCP = self.compute_imDCCP_from_solutions(solutions)
         H = self._compute_h_from_svd(imDCCP)
 
