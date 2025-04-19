@@ -1,8 +1,10 @@
 import numpy as np
 import logging
+import requests
+import json
 from HomoTopiContinuation.Rectifier.rectifier import Rectifier
 from HomoTopiContinuation.DataStructures.datastructures import Conics, Homography, Conic
-import os
+
 class NumericRectifier(Rectifier):
     """
     A numeric implementation of the Rectifier using numpy for numerical computation.
@@ -10,9 +12,7 @@ class NumericRectifier(Rectifier):
         "Jürgen Richter-Gebert Perspectives on Projective Geometry A Guided Tour Through Real and Complex Geometry".
         Chapter 11.1.  
         
-    The algorithm interface with the matlab Conic Intersection by Pierlugi Taddei.
-    https://it.mathworks.com/matlabcentral/fileexchange/28318-conics-intersection
-    
+    The algorithm interfaces with a REST API for conic intersection calculations.
     """
 
     def rectify(self, C_img: Conics) -> Homography:
@@ -25,14 +25,6 @@ class NumericRectifier(Rectifier):
         Returns:
             Homography: The rectifying homography
         """
-        # Import matlab engine for Python
-        try:
-            import matlab.engine
-        except ImportError:
-            raise ImportError("MATLAB Engine for Python is required. Install with 'pip install matlabengine'")
-        
-        
-        
         # Extract the three conics from the Conics object
         C1, C2, C3 = C_img
         
@@ -40,38 +32,20 @@ class NumericRectifier(Rectifier):
         assert type(C2) == Conic
         assert type(C3) == Conic
         
-        
-        
-        # Start MATLAB engine
-        eng = matlab.engine.start_matlab()
-        
-        # add the script to the matlab path
-        eng.addpath(os.path.join(os.path.dirname(__file__), 'Matlab/conicsIntersection1.04'))
-        
-        # convert the conics to matlab arrays
-        C1_matlab = matlab.double(C1.M.tolist())
-        C2_matlab = matlab.double(C2.M.tolist())
-        C3_matlab = matlab.double(C3.M.tolist())
-        
         try:
-            # Find the intersection points between the conics
-            # Using Pierlugi Taddei's Conic Intersection implementation
+            # Find the intersection points between the conics using the REST API
+            result = self._call_intersect_conics_api(C1.M, C2.M)
             
-            #NB in this case just 2 conics are sufficient to get the image of the circular points
-            result = eng.intersectConics(C1_matlab, C2_matlab)
-            # transpose the result to be a 2x3 matrix
-            result = np.array(result).T
-            result2 = eng.intersectConics(C1_matlab, C3_matlab)
-            result2 = np.array(result2).T
-            result3 = eng.intersectConics(C2_matlab, C3_matlab)
-            result3 = np.array(result3).T
+            result2 = self._call_intersect_conics_api(C1.M, C3.M)
+            
+            result3 = self._call_intersect_conics_api(C2.M, C3.M)
 
             intersection_points = np.concatenate((result, result2, result3), axis=0)
             self.logger.info("intersection_points: \n", intersection_points)
+            
             # set to 0 elements inside the array under a treshold
             intersection_points = self._clear_found_intersection_points(intersection_points)
             filtered_points = self._get_common_intersection_points(intersection_points)
-            
             self.logger.info("filtered_points: \n", filtered_points)
 
             # Create a homography matrix based on the points
@@ -79,16 +53,61 @@ class NumericRectifier(Rectifier):
             H = self._compute_h_from_svd(imDCCP)
             self.logger.info("H: \n", H.H)
             return H
-
             
         except Exception as e:
-            logging.error(f"Error in MATLAB conic intersection: {e}")
+            logging.error(f"Error in conic intersection API call: {e}")
             raise
-        finally:
-            # Close MATLAB engine
-            eng.quit()
-            
     
+    def _call_intersect_conics_api(self, conic1, conic2):
+        """
+        Call the REST API for conic intersection.
+        
+        Args:
+            conic1: First conic matrix (3x3)
+            conic2: Second conic matrix (3x3)
+            
+        Returns:
+            Array of intersection points
+        """
+        url = "http://localhost:9910/conicIntersector/intersectConics"
+        headers = {"Content-Type": "application/json"}
+        
+        # Prepare the request payload
+        payload = {
+            "rhs": [conic1.tolist(), conic2.tolist()],
+            "nargout": 1
+        }
+        
+        # Make the API call
+        response = requests.post(url, headers=headers, data=json.dumps(payload))
+        
+        if response.status_code != 200:
+            raise Exception(f"API call failed with status code {response.status_code}: {response.text}")
+        
+        # Parse the response
+        result_data = response.json()
+        # Extract the data array from the response
+        mw_data = result_data["lhs"][0]["mwdata"]
+        mw_size = result_data["lhs"][0]["mwsize"]
+        
+        # Check if the data is complex (contains real and imaginary parts)
+        # If complex, every two consecutive values represent a complex number
+        if "mwcomplex" in result_data["lhs"][0] and result_data["lhs"][0]["mwcomplex"]:
+            # Create complex numbers by pairing real and imaginary parts
+            complex_data = []
+            for i in range(0, len(mw_data), 2):
+                if i+1 < len(mw_data):  # Ensure we have both real and imaginary parts
+                    complex_data.append(complex(mw_data[i], mw_data[i+1]))
+            
+            # Reshape the complex data according to the actual size
+            # The mw_size should be half the length in the dimension that contains complex values
+            reshaped_data = np.array(complex_data).reshape(mw_size[1], mw_size[0])
+        else:
+            # Regular real data - reshape as before
+            reshaped_data = np.array(mw_data).reshape(mw_size[1], mw_size[0])
+        
+        return reshaped_data
+        
     def _get_common_intersection_points(self, intersection_points):
         """
         Filter unique intersection points.
