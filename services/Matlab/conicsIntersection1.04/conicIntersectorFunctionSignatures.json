@@ -1,0 +1,35 @@
+// Function Signatures
+// To optionally specify argument types and/or sizes, search for "type"
+// and insert the appropriate specifiers inside the brackets. For example:
+//
+//    "type": ["double", "size=1,1"]
+//
+// To modify function or parameter help text, search for "purpose" and edit
+// the values.
+//
+// JSON-formatted text below this line.
+{
+    "_schemaVersion": "1.1.0",
+    "intersectConics": {
+        "inputs": [
+            {
+                "name": "E1",
+                "type": ["double", "size=3,3"],
+                "purpose": "The first conic in homogeneus coordinates"
+            },
+            {
+                "name": "E2",
+                "type": ["double", "size=3,3"],
+                "purpose": "The second conic in homogeneus coordinates"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "P",
+                "type": [],
+                "purpose": ""
+            }
+        ],
+        "purpose": "  intersectConics - intersects two non degenerate conics\n           - Pierluigi Taddei (pierluigi.taddei@polimi.it)\n \n  Usage:   P = intersectConics(E1, E2)\n \n  Arguments:\n            E1, E2 - homogeneous conic matrices. E1 must be non degenerate\n \n            P - matrix of homogeneous intersection points (each column is a\n            point)\n  08.3.2007 : Created\n"
+    }
+}

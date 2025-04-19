@@ -1,6 +1,5 @@
-
 services:
-  julia-rectifier:
+  julia-intersector-hc:
     build:
       context: ./Julia
       dockerfile: Dockerfile.julia
@@ -16,12 +15,26 @@ services:
       retries: 3
       start_period: 60s # Give Julia time to start and compile
 
+  matlab-intersector:
+    build:
+      context: ./Matlab/conicintersectormicroserviceDockerImage
+      dockerfile: Dockerfile
+    container_name: matlab_intersector_service
+    ports:
+      - "9910:9910"
+    restart: unless-stopped
+    # Add healthcheck
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9910/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 # Usage examples:
 # 
-# 1. Build and start the service:
+# 1. Build and start the services:
 #    docker-compose up -d
 #
-# 2. Example API call:
+# 2. Example Julia API call:
 #    curl -X POST http://localhost:8081/rectify \
 #      -H "Content-Type: application/json" \
 #      -d '{"conics": [
@@ -30,5 +43,14 @@ services:
 #            [0.0, 0.0, 1.0, 0.0, 0.0, -1.0]
 #          ]}'
 #
-# 3. Check service health:
-#    curl http://localhost:8081/health 
+# 3. Example Conics Intersection API call:
+#    curl -X POST http://localhost:8082/intersect \
+#      -H "Content-Type: application/json" \
+#      -d '{"conics": [
+#            [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, -1.0]],
+#            [[3.0, 0.0, 0.0], [0.0, 0.0, -0.5], [0.0, -0.5, -2.0]]
+#          ]}'
+#
+# 4. Check services health:
+#    curl http://localhost:8081/health
+#    curl http://localhost:8082/health 
