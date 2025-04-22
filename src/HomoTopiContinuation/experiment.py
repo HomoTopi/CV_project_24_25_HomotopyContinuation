@@ -23,8 +23,9 @@ def sceneDefinition() -> sg.SceneDescription:
     c2 = Circle(np.array([0.5, 0]), 1)
     c3 = Circle(np.array([0, 0]), 1.5)
     offset = np.array([0, 0, 2])
+    noiseScale = 0.1
 
-    return sg.SceneDescription(f, theta, offset, c1, c2, c3)
+    return sg.SceneDescription(f, theta, offset, c1, c2, c3, noiseScale)
 
 
 def main():
@@ -34,13 +35,19 @@ def main():
     sceneDescription = sceneDefinition()
     print("[Scene Described]")
 
-    img = sg.SceneGenerator.generate_scene(sceneDescription)
+    img = sg.SceneGenerator().generate_scene(sceneDescription)
     print("[Scene Generated]")
 
     try:
         H_reconstructed = rectifier.rectify(img.C_img)
-    except ValueError as e:
+    except Exception as e:
         print(e)
+        # Plot the results
+        plotter = Plotter.Plotter(2, 2, title="Experiment")
+
+        plotter.plotScene(sceneDescription, img)
+
+        plotter.show()
         return
 
     print("True Homography:")

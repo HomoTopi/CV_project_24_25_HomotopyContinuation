@@ -33,9 +33,9 @@ class Conic:
             raise ValueError("Conic matrix must be symmetric")
 
         self._M = M
-    
+
     @property
-    def M(self) -> np.ndarray:  
+    def M(self) -> np.ndarray:
         """
         Return the conic matrix.
 
@@ -43,7 +43,7 @@ class Conic:
             float: The conic matrix
         """
         return self._M
-    
+
     @M.setter
     def M(self, value):
         """
@@ -51,7 +51,6 @@ class Conic:
         """
         self._M = value
 
-    
     def to_algebraic_form(self) -> tuple:
         """
         Convert from matrix form to algebraic parameters form.
@@ -69,8 +68,7 @@ class Conic:
             self.M[2, 2]          # f
         )
 
-    
-    def __call__(self) -> np.ndarray :
+    def __call__(self) -> np.ndarray:
         """
         Return the conic matrix.
 
@@ -96,6 +94,24 @@ class Conic:
         Get the first non-zero entry of the conic matrix.
         """
         return np.nonzero(self.M)[0][0], np.nonzero(self.M)[1][0]
+
+    def randomize(self, noiseScale: float = 0.1) -> 'Conic':
+        """
+        Randomize the conic matrix by adding Gaussian noise.
+
+        Args:
+            noiseScale (float): The scale of the noise to be added
+
+        Returns:
+            Conic: The randomized conic
+        """
+        noise = np.random.normal(0, noiseScale, self.M.shape)
+
+        # make the noise symmetric
+        noise = noise + noise.T - np.diag(np.diag(noise))
+        noise = noise / 2
+
+        return Conic(self.M + noise)
 
 
 class Conics:
@@ -144,6 +160,7 @@ class Conics:
         Return an iterator over the conics.
         """
         return iter([self.C1, self.C2, self.C3])
+
     def to_json(self):
         """
         Convert the Conics object to a JSON serializable format.
@@ -153,6 +170,7 @@ class Conics:
             "C2": self.C2.M.tolist(),
             "C3": self.C3.M.tolist()
         }
+
     def from_json(json_str):
         """
         Create a Conics object from a JSON string.
@@ -209,7 +227,7 @@ class SceneDescription:
         circle3 (circle): Third circle
     """
 
-    def __init__(self, f: float, y_rotation: float, offset: np.ndarray, circle1: Circle, circle2: Circle, circle3: Circle):
+    def __init__(self, f: float, y_rotation: float, offset: np.ndarray, circle1: Circle, circle2: Circle, circle3: Circle, noiseScale: float = 0):
         """
         Initialize a SceneDescription object.
 
@@ -220,7 +238,8 @@ class SceneDescription:
             circle1 (Circle): Parameters of the first circle
             circle2 (Circle): Parameters of the second circle
             circle3 (Circle): Parameters of the third circle
-        
+            noiseScale (float): Scale of the noise to be added to the circles
+
         Raises:
             ValueError: If the focal length is not a positive number, or if the offset vector does not have the expected shape.
         """
@@ -234,17 +253,22 @@ class SceneDescription:
         self.circle2 = circle2
         self.circle3 = circle3
         self.offset = offset
+        self.noiseScale = noiseScale
 
     def from_json(json_str) -> 'SceneDescription':
         """
         Create a SceneDescription object from a JSON string.
         """
         json_str['offset'] = np.array(json_str['offset'])
-        json_str['circle1'] = Circle(np.array(json_str['circle1']['center']), json_str['circle1']['radius'])
-        json_str['circle2'] = Circle(np.array(json_str['circle2']['center']), json_str['circle2']['radius'])
-        json_str['circle3'] = Circle(np.array(json_str['circle3']['center']), json_str['circle3']['radius'])
+        json_str['circle1'] = Circle(
+            np.array(json_str['circle1']['center']), json_str['circle1']['radius'])
+        json_str['circle2'] = Circle(
+            np.array(json_str['circle2']['center']), json_str['circle2']['radius'])
+        json_str['circle3'] = Circle(
+            np.array(json_str['circle3']['center']), json_str['circle3']['radius'])
         json_str['f'] = float(json_str['f'])
         json_str['y_rotation'] = float(json_str['y_rotation'])
+        json_str['noiseScale'] = float(json_str['noiseScale'])
 
         return SceneDescription(
             json_str['f'],
@@ -252,9 +276,10 @@ class SceneDescription:
             json_str['offset'],
             json_str['circle1'],
             json_str['circle2'],
-            json_str['circle3']
+            json_str['circle3'],
+            json_str['noiseScale']
         )
-    
+
     def to_json(self) -> dict:
         """
         Convert the SceneDescription object to a JSON serializable format.
@@ -294,7 +319,7 @@ class Homography:
 
         Args:
             H (numpy.ndarray): The homography matrix
-        
+
         Raises:
             ValueError: If the homography matrix is not 3x3 or not invertible
         """
@@ -350,6 +375,7 @@ class Homography:
             Homography: The result of the multiplication
         """
         return Homography(self.H @ other.H)
+
     def to_json(self):
         """
         Convert the Homography object to a JSON serializable format.
@@ -398,6 +424,7 @@ class Img:
                 "C3": self.C_img.C3.M.tolist()
             }
         }
+
     def from_json(json_str):
         """
         Create an Img object from a JSON string.

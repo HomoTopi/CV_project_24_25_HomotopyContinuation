@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from HomoTopiContinuation.DataStructures.datastructures import Conic, Circle, Img
+from HomoTopiContinuation.DataStructures.datastructures import Conic, Circle, Img, Homography
 from HomoTopiContinuation.Plotter.CameraPlotter import CameraPlotter
 import HomoTopiContinuation.SceneGenerator.scene_generator as sg
 import seaborn as sns
@@ -162,7 +162,7 @@ class Plotter:
             size (float): The size of the camera
             color (str): The color of the camera
             bodyRatio (float): The ratio of the body the ratio between the body height and the body width, default 0.5
-        
+
         Raises:
             ValueError: If the current axis is not 3D
         """
@@ -274,7 +274,7 @@ class Plotter:
             size (float): The size of the reference frame
             colorX (str): The color of the X axis
             colorY (str): The color of the Y axis
-        
+
         Raises:
             ValueError: If the current axis is not 3D
         """
@@ -377,6 +377,21 @@ class Plotter:
                           name="Circle 2", color=colorC2)
         self.plotCircle2D(sceneDescription.circle3,
                           name="Circle 3", color=colorC3)
+
+        if (sceneDescription.noiseScale > 0):
+            h_true_inv = Homography(img.h_true.inv())
+            C1_best = img.C_img.C1.applyHomography(
+                h_true_inv)
+            C2_best = img.C_img.C2.applyHomography(
+                h_true_inv)
+            C3_best = img.C_img.C3.applyHomography(
+                h_true_inv)
+            self.plotConic2D(
+                C1_best, conicName="Circle 1 Best", color='orange', x_range=(-2, 2, 100), y_range=(-2, 2, 100))
+            self.plotConic2D(
+                C2_best, conicName="Circle 2 Best", color='orange', x_range=(-2, 2, 100), y_range=(-2, 2, 100))
+            self.plotConic2D(
+                C3_best, conicName="Circle 3 Best", color='orange', x_range=(-2, 2, 100), y_range=(-2, 2, 100))
         self.drawLegend()
 
     def show(self):
