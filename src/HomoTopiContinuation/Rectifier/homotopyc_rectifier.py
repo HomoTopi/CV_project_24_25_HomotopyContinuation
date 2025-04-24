@@ -23,7 +23,7 @@ class HomotopyContinuationRectifier(Rectifier):
         DOMAIN = "localhost"
         PORT = 8081
         SERVICE = "rectify"
-        
+
         self.service_url = f"http://{DOMAIN}:{PORT}/{SERVICE}"
         super().__init__()
 
@@ -38,11 +38,8 @@ class HomotopyContinuationRectifier(Rectifier):
             Homography: The rectification homography
         """
 
-        script = self._get_script('Julia/rectify.jl')
         self.logger.info("Rectifying using HomotopyContinuation.jl")
         self.logger.debug(f"Conics: {C_img}")
-
-        self.logger.info(f"Evaluating script: {script}")
 
         # Extract algebraic parameters from conics
         a1, b1, c1, d1, e1, f1 = C_img.C1.to_algebraic_form()
@@ -56,7 +53,6 @@ class HomotopyContinuationRectifier(Rectifier):
         self.logger.info(
             f"Equation 3: {a3}*x^2 + {b3}*x*y + {c3}*y^2 + {d3}*x*w + {e3}*y*w + {f3}*w^2")
 
-     
         data = {
             "conics": [
                 [a1, b1, c1, d1, e1, f1],
@@ -64,37 +60,25 @@ class HomotopyContinuationRectifier(Rectifier):
                 [a3, b3, c3, d3, e3, f3]
             ]
         }
-        
+
         headers = {"Content-Type": "application/json"}
-        
-        response = requests.post(self.service_url, headers=headers, data=json.dumps(data))
-        
+
+        response = requests.post(
+            self.service_url, headers=headers, data=json.dumps(data))
+
         if response.status_code != 200:
             raise Exception(f"API call failed: {response.json()}")
-        
+
         solutions = response.json()["complex_sols"]
-        
+
         self.logger.info(f"Solutions: {solutions}")
         # TODO: check if casting is the same as the one used in SymPy
         solutions = np.array([[complex(sol["re"], sol["im"]) for sol in sol_tuple]
                               for sol_tuple in solutions])
-        
+
         self.logger.info(f"Result: {solutions}")
- 
+
         imDCCP = self.compute_imDCCP_from_solutions(solutions)
         H = self._compute_h_from_svd(imDCCP)
 
         return H
-
-    def _get_script(self, filename: str) -> str:
-        """"
-        Get the script from the given filename.
-
-        Args:
-            filename (str): The name of the script file
-        Returns:
-            str: The script as a string
-        """
-        path = os.path.join(os.path.dirname(__file__), filename)
-        script = open(path, "r", encoding="utf8").read()
-        return script
