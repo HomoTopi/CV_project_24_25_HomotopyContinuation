@@ -1,6 +1,8 @@
 import numpy as np
 from HomoTopiContinuation.DataStructures.datastructures import SceneDescription, Conic, Conics, Circle, Homography, Img
 import HomoTopiContinuation.Plotter.Plotter as Plotter
+import json
+import logging
 
 
 class SceneGenerator:
@@ -10,31 +12,43 @@ class SceneGenerator:
     This class creates scenes from the given parameters.
     It generates conics (circles) and computes the homography matrix
     based on the scene description.
-    
+
     """
-    @staticmethod
-    def generate_scene(scene_description: SceneDescription) -> Img:
+
+    def __init__(self):
+        """
+        Initialize the SceneGenerator class.
+        Set up the logger for the class.
+        """
+        logging.basicConfig(
+            filename='sceneGenerator.log',
+            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+            level=logging.INFO
+        )
+        self.logger = logging.getLogger(self.__class__.__name__)
+
+    def generate_scene(self, scene_description: SceneDescription) -> Img:
         """
         Construct the matrices of the two circles and the homography from the scene description.
         Apply the homography to the true conics (circles) to get the warped conics.
-
-        Args:
-            scene_description (SceneDescription): The description of the scene
-
-        Returns:
-            Img: The pair of warped conics and the true homography
         """
+
         # Convert circles to conics
         C1_true = scene_description.circle1.to_conic()
         C2_true = scene_description.circle2.to_conic()
         C3_true = scene_description.circle3.to_conic()
+
         # Compute the homography
         H = SceneGenerator.compute_H(scene_description)
+
         # Apply homography to the true conics
-        C1 = C1_true.applyHomography(H)
-        C2 = C2_true.applyHomography(H)
-        C3 = C3_true.applyHomography(H)
+        C1 = C1_true.applyHomography(H).randomize(scene_description.noiseScale)
+        C2 = C2_true.applyHomography(H).randomize(scene_description.noiseScale)
+        C3 = C3_true.applyHomography(H).randomize(scene_description.noiseScale)
+
         conics = Conics(C1, C2, C3)
+
+        # Create the Img object and store its JSON
         return Img(H, conics)
 
     @staticmethod
@@ -92,3 +106,17 @@ class SceneGenerator:
         o_pi = scene_description.offset
 
         return np.array([r_pi1, r_p12, o_pi]).T
+
+
+if (__name__ == "__main__"):
+    scene_generator = SceneGenerator()
+    # Assuming scene_description is already defined
+    # scene_description = SceneDescription(...)  # Replace with actual scene description
+    # Call the generate_scene method
+    # scene_generator.generate_scene(scene_description)
+    # For demonstration, we will use dummy data
+    C1 = Circle(np.array([0, 0]), 1)
+    C2 = Circle(np.array([1, 1]), 1)
+    C3 = Circle(np.array([2, 2]), 1)
+    scene_description = SceneDescription(1, 45, np.array([0, 0]), C1, C2, C3)
+    scene_generator.generate_scene(scene_description)

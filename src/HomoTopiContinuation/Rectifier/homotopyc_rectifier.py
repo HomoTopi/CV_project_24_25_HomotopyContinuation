@@ -31,9 +31,6 @@ class HomotopyContinuationRectifier(Rectifier):
         """
         Rectify a pair of conics using the Julia Homotopy Continuation package.
 
-        Args:
-            C_img (Conics): A pair of conics in the image
-
         Returns:
             Homography: The rectification homography
         """
@@ -82,3 +79,8 @@ class HomotopyContinuationRectifier(Rectifier):
         H = self._compute_h_from_svd(imDCCP)
 
         return H
+
+
+if __name__ == "__main__":
+    rectifier = HomotopyContinuationRectifier()
+    rectifier.rectify("../data/")

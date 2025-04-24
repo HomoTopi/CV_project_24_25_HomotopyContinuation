@@ -32,5 +32,4 @@ class AngleDistortionLosser(Losser):
         m = np.array([0, 1, 0])
         C = h_true() @ h_computed.inv() @ \
             AngleDistortionLosser.C_inf_star @ h_computed.inv().T @ h_true().T
-        print('\tC_inf_star\n', C)
         return np.acos(AngleDistortionLosser.distanceMetric(C, l, m) / np.sqrt(AngleDistortionLosser.distanceMetric(C, l, l) * AngleDistortionLosser.distanceMetric(C, m, m))) * 180 / np.pi

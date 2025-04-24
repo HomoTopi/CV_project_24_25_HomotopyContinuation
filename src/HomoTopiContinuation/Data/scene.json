@@ -1,0 +1,17 @@
+{
+    "f_range": [1.0, 1.0, 1.0],
+    "y_rotation_range": [1.0, 1.0, 1.0],
+    "offset_range_x": [1.0, 1.0, 1.0],
+    "offset_range_y": [1.0, 1.0, 1.0],
+    "offset_range_z": [1.0, 1.0, 1.0],
+    "c1_centre_x_range": [0.0, 0.0, 0.1],
+    "c1_centre_y_range": [0.0, 0.0, 0.1],
+    "c1_radius_range": [1.0, 1.0, 1.0],
+    "c2_centre_x_range": [1.0, 1.0, 1.0],
+    "c2_centre_y_range": [1.0, 1.0, 1.0],
+    "c2_radius_range": [1.0, 1.0, 1.0],
+    "c3_centre_x_range": [1.0, 1.0, 1.0],
+    "c3_centre_y_range": [1.0, 1.0, 1.0],
+    "c3_radius_range": [1.5, 1.5, 1.5],
+    "rectifier": "homotopy"
+}

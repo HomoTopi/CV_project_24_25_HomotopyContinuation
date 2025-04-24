@@ -1,0 +1,73 @@
+import optuna
+import os
+from dotenv import load_dotenv
+import numpy as np
+from HomoTopiContinuation.Losser import CircleLosser
+from HomoTopiContinuation.DataStructures.datastructures import Conics, Conic, SceneDescription, Circle
+from HomoTopiContinuation.SceneGenerator.scene_generator import SceneGenerator
+from HomoTopiContinuation.Rectifier.homotopyc_rectifier import HomotopyContinuationRectifier
+from HomoTopiContinuation.ConicWarper.ConicWarper import ConicWarper
+
+def objective(trial):
+    """
+    Objective function for Optuna to optimize the parameters of the scene generation.
+    The function generates a scene with the given parameters, rectifies the image and warps the conics in the scene,
+    and computes the eccentricities of the warped conics.
+    The function returns the negative sum of the eccentricities as the objective value to minimize.
+    """
+    f = trial.suggest_float("f", 1, 10)
+    y_rotation = trial.suggest_float("y_rotation", 0, 10)
+    offset_x = trial.suggest_float("offset_x", 0, 1)
+    offset_y = trial.suggest_float("offset_y", 0, 1)
+    offset_z = trial.suggest_float("offset_z", 1, 2)
+    c1_centre_x = trial.suggest_float("c1_centre_x", -5, 10)
+    c1_centre_y = trial.suggest_float("c1_centre_y", 0, 10)
+    c1_radius = trial.suggest_float("c1_radius", 1, 10)
+    c2_centre_x = trial.suggest_float("c2_centre_x", 0, 10)
+    c2_centre_y = trial.suggest_float("c2_centre_y", 0, 10)
+    c2_radius = trial.suggest_float("c2_radius", 1, 10)
+    c3_centre_x = trial.suggest_float("c3_centre_x", 0, 10)
+    c3_centre_y = trial.suggest_float("c3_centre_y", 0, 10)
+    c3_radius = trial.suggest_float("c3_radius", 1, 10)
+    
+    try:
+        circle1 = Circle(np.array([c1_centre_x, c1_centre_y]), c1_radius)
+        circle2 = Circle(np.array([c2_centre_x, c2_centre_y]), c2_radius)
+        circle3 = Circle(np.array([c3_centre_x, c3_centre_y]), c3_radius)
+        scene = SceneDescription(f, y_rotation, np.array([offset_x, offset_y, offset_z]),
+                             circle1, circle2, circle3)
+        scene_generator = SceneGenerator()
+        image = scene_generator.generate_scene(scene)
+        rectifier = HomotopyContinuationRectifier()
+        homography = rectifier.rectify(image.C_img)
+        conic_warper = ConicWarper()
+        warpedConics = conic_warper.warpConics(image.C_img,homography)
+        eccentricities = CircleLosser.CircleLosser.computeCircleLoss(scene, warpedConics)
+        return -sum(eccentricities)      
+    except ValueError as e:
+        #TODO: How to handle the exceptions appropriately?
+        raise optuna.exceptions.TrialPruned()
+    
+def experiment():
+    """
+    Run the experiments with Optuna and store the results on supabase db.
+    """
+    load_dotenv()
+    storage = (os.getenv("OPTUNA_DB_URL"))
+    search_space = {"f":[1, 10.0],"y_rotation":[0.5,10.0],  "offset_x":[0.5,1.0], "offset_y":[0.5,1.0],
+                     "offset_z":[1.0,2.0], "c1_centre_x": [-0.5, 10.0],"c1_centre_y": [0.0, 10.0],
+                     "c1_radius": [1.0, 10.0], "c2_centre_x": [0.0, 10.0], "c2_centre_y": [0.0, 10.0],
+                     "c2_radius": [1.0, 10.0], "c3_centre_x": [0.0, 10.0], "c3_centre_y": [0.0, 10.0],
+                     "c3_radius": [1.0, 10.0]}
+    seed = 42
+    study = optuna.create_study(
+        study_name="scene_opt",
+        storage=storage,
+        load_if_exists=True,
+        sampler=optuna.samplers.GridSampler(search_space,seed)
+    )
+    study.optimize(objective, n_trials=100)
+
+
+if __name__ == "__main__":
+    experiment()
