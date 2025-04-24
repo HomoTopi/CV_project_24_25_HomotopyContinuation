@@ -19,6 +19,10 @@ class CircleLosser(SceneLosser):
         Returns:
             float: The eccentricity of the conic
         """
+        # Normalize the conic matrix
+        if (conic.M[2, 2] != 0):
+            conic.M = conic.M / conic.M[2, 2]
+
         # Compute the eigenvalues of the conic matrix
         eigenvalues, _ = np.linalg.eig(conic.M[:2, :2])
 
