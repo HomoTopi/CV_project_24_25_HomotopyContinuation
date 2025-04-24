@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from HomoTopiContinuation.DataStructures.datastructures import Conic, Circle, Img, Homography
+from HomoTopiContinuation.DataStructures.datastructures import Conic, Circle, Img, Homography, Conics
 from HomoTopiContinuation.Plotter.CameraPlotter import CameraPlotter
 import HomoTopiContinuation.SceneGenerator.scene_generator as sg
 import seaborn as sns
@@ -393,6 +393,48 @@ class Plotter:
             self.plotConic2D(
                 C3_best, conicName="Circle 3 Best", color='orange', x_range=(-2, 2, 100), y_range=(-2, 2, 100))
         self.drawLegend()
+
+    def plotExperiment(self, sceneDescription: sg.SceneDescription, img: Img, warpedConics: Conics, colorC1='r', colorC2='g', colorC3='b', name='Scene', warpedConicsDrawingSize=8, warpedConicsDrawingNPoints=100):
+        """
+        Plot the experiment with the original image, the rectified image, and the 3D scene.
+        This will produce four plots:
+        - A rectified plot with the circles
+        - A 3D plot with the camera and the circles
+        - A plot of the rendered image with the conics
+        - A plot of the warped conics
+        This requires at least 4 plots remaining.
+
+        Args:
+            sceneDescription (sg.SceneDescription): The description of the scene
+            img (Img): The rendered image of the scene
+            warpedConics (Conics): The recrtified conics
+            colorC1 (str, optional): The color for the plotting of the first conic. Defaults to 'r'.
+            colorC2 (str, optional): The color for the plotting of the second conic. Defaults to 'g'.
+            colorC3 (str, optional): The color for the plotting of the third conic. Defaults to 'b'.
+            name (str, optional): The name of the scene. Defaults to 'Scene'.
+            warpedConicsDrawingSize (int, optional): The size of the drawing area for the conics. Defaults to 30.
+            warpedConicsDrawingNPoints (int, optional): The number of points used draw the conics. Defaults to 100.
+        """
+        if (self.maxPlots < 4):
+            raise ValueError(
+                "You need at least 4 plots to plot the experiment.")
+        if (self.plotNumber + 3 > self.maxPlots):
+            raise ValueError(
+                "You need at least 4 plots to plot the experiment. Please create a new figure.")
+
+        self.plotScene(sceneDescription, img, colorC1,
+                       colorC2, colorC3, name)
+
+        self.newAxis("Reconstructed Rectification", axisSame=True)
+
+        min_x, max_x = -warpedConicsDrawingSize, warpedConicsDrawingSize
+        min_y, max_y = -warpedConicsDrawingSize, warpedConicsDrawingSize
+        self.plotConic2D(
+            warpedConics.C1, conicName="C1", color="red", x_range=(min_x, max_x, warpedConicsDrawingNPoints), y_range=(min_y, max_y, warpedConicsDrawingNPoints))
+        self.plotConic2D(
+            warpedConics.C2, conicName="C2", color="green", x_range=(min_x, max_x, warpedConicsDrawingNPoints), y_range=(min_y, max_y, warpedConicsDrawingNPoints))
+        self.plotConic2D(
+            warpedConics.C3, conicName="C3", color="blue", x_range=(min_x, max_x, warpedConicsDrawingNPoints), y_range=(min_y, max_y, warpedConicsDrawingNPoints))
 
     def show(self):
         """

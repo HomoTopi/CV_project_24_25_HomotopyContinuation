@@ -6,6 +6,7 @@ import HomoTopiContinuation.Rectifier.standard_rectifier as sr
 import HomoTopiContinuation.Rectifier.homotopyc_rectifier as hr
 import HomoTopiContinuation.Rectifier.numeric_rectifier as nr
 from HomoTopiContinuation.Losser.CircleLosser import CircleLosser
+from HomoTopiContinuation.ConicWarper.ConicWarper import ConicWarper
 from enum import Enum
 
 
@@ -13,6 +14,7 @@ class Rectifiers(Enum):
     standard = sr.StandardRectifier()
     homotopy = hr.HomotopyContinuationRectifier()
     numeric = nr.NumericRectifier()
+
 
 def sceneDefinition() -> sg.SceneDescription:
     # Parameters
@@ -24,9 +26,8 @@ def sceneDefinition() -> sg.SceneDescription:
     c2 = Circle(np.array([0.5, 0]), 1)
     c3 = Circle(np.array([0, 0]), 1.5)
 
-    
     offset = np.array([0, 0, 2])
-    noiseScale = 0.1
+    noiseScale = 0
 
     return sg.SceneDescription(f, theta, offset, c1, c2, c3, noiseScale)
 
@@ -60,9 +61,8 @@ def main():
     print(H_reconstructed.H)
 
     # Warp The Circles
-    C1_reconstructed = img.C_img.C1.applyHomography(H_reconstructed)
-    C2_reconstructed = img.C_img.C2.applyHomography(H_reconstructed)
-    C3_reconstructed = img.C_img.C3.applyHomography(H_reconstructed)
+    warpedConics = ConicWarper().warpConics(img.C_img, H_reconstructed)
+    print("[Conics Warped]")
 
     # Compute the loss
     loss = losser.computeCircleLoss(sceneDescription, img.C_img)
@@ -72,18 +72,7 @@ def main():
     # Plot the results
     plotter = Plotter.Plotter(2, 2, title="Experiment")
 
-    plotter.plotScene(sceneDescription, img)
-
-    plotter.newAxis("Reconstructed Rectification")
-    size = 30
-    min_x, max_x = -size, size
-    min_y, max_y = -size, size
-    plotter.plotConic2D(
-        C1_reconstructed, conicName="C1", color="red", x_range=(min_x, max_x, 500), y_range=(min_y, max_y, 500))
-    plotter.plotConic2D(
-        C2_reconstructed, conicName="C2", color="green", x_range=(min_x, max_x, 500), y_range=(min_y, max_y, 500))
-    plotter.plotConic2D(
-        C3_reconstructed, conicName="C3", color="blue", x_range=(min_x, max_x, 500), y_range=(min_y, max_y, 500))
+    plotter.plotExperiment(sceneDescription, img, warpedConics)
 
     plotter.show()
 
