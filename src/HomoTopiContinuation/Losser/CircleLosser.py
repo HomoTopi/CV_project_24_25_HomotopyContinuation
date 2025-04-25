@@ -19,6 +19,10 @@ class CircleLosser(SceneLosser):
         Returns:
             float: The eccentricity of the conic
         """
+        # Normalize the conic matrix
+        if (conic.M[2, 2] != 0):
+            conic.M = conic.M / conic.M[2, 2]
+
         # Compute the eigenvalues of the conic matrix
         eigenvalues, _ = np.linalg.eig(conic.M[:2, :2])
 
@@ -32,7 +36,7 @@ class CircleLosser(SceneLosser):
     def computeCircleLoss(sceneDescription: SceneDescription, C_computed: Conics) -> float:
         """
         Computes the loss of a shape reconstruction based on the reconstracted circles.
-        This returns the average eccentricity of the circles e.
+        This returns the eccentricities of the circles e.
         When the circles are perfect, e = 0.
         When the circles are ellipses, 0 < e < 1.
         When the circles are hyperbolas, e > 1.
@@ -47,9 +51,7 @@ class CircleLosser(SceneLosser):
         Returns:
             float: The loss of the shape reconstruction
         """
-        # Compute the average eccentricity of the circles
+        # Compute the eccentricities of the circles
         eccentricities = [
             CircleLosser.computeEccentricity(c) for c in C_computed]
-        # print(f"Eccentricities: {eccentricities}")
-        avgEccentricity = np.mean(eccentricities)
-        return avgEccentricity
+        return eccentricities

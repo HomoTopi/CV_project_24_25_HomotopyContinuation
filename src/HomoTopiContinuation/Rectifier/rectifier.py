@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from HomoTopiContinuation.DataStructures.datastructures import Conics, Homography
+from HomoTopiContinuation.DataStructures.datastructures import Conics, Homography, Img
 import logging
 import numpy as np
 import numpy.linalg as la
