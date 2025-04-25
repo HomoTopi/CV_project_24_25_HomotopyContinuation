@@ -19,21 +19,28 @@ class Rectifiers(Enum):
 def sceneDefinition() -> sg.SceneDescription:
     # Parameters
     f = 1
-    theta = 80
+    theta = 60
 
     # Define the circles
     c1 = Circle(np.array([0, 0]), 1)
     c2 = Circle(np.array([0.5, 0]), 1)
     c3 = Circle(np.array([0, 0]), 1.5)
 
+    print("Circle 1:")
+    print(c1.to_conic().M)
+    print("Circle 2:")
+    print(c2.to_conic().M)
+    print("Circle 3:")
+    print(c3.to_conic().M)
+
     offset = np.array([0, 0, 2])
-    noiseScale = 0
+    noiseScale = 0.1
 
     return sg.SceneDescription(f, theta, offset, c1, c2, c3, noiseScale)
 
 
 def main():
-    rectifier = Rectifiers.homotopy.value
+    rectifier = Rectifiers.numeric.value
     losser = CircleLosser
 
     sceneDescription = sceneDefinition()
@@ -45,6 +52,8 @@ def main():
     try:
         H_reconstructed = rectifier.rectify(img.C_img)
     except Exception as e:
+        print("[Rectification Failed]")
+        print("Error:")
         print(e)
         # Plot the results
         plotter = Plotter.Plotter(2, 2, title="Experiment")
@@ -65,14 +74,15 @@ def main():
     print("[Conics Warped]")
 
     # Compute the loss
-    loss = losser.computeCircleLoss(sceneDescription, img.C_img)
+    loss = losser.computeCircleLoss(sceneDescription, warpedConics)
     print("Loss:")
     print(loss)
 
     # Plot the results
     plotter = Plotter.Plotter(2, 2, title="Experiment")
 
-    plotter.plotExperiment(sceneDescription, img, warpedConics)
+    plotter.plotExperiment(sceneDescription, img,
+                           warpedConics)
 
     plotter.show()
 
