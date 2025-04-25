@@ -32,12 +32,16 @@ class CircleLosser(SceneLosser):
             # Parabola
             return 1.0
 
+        print("det:", det)
+        print("eigs:", eigs)
+
         denoms = 1/eigs
         if det > 0:
             # ellipse
             return np.sqrt(1 - np.min(denoms)/np.max(denoms))
 
-        return np.sqrt(1 + np.min(denoms)/np.max(denoms))
+        # Hyperbola
+        return np.sqrt(1 + np.abs(np.min(denoms)/np.max(denoms)))
 
     def computeCircleLoss(sceneDescription: SceneDescription, C_computed: Conics) -> float:
         """

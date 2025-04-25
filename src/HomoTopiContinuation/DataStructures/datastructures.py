@@ -158,7 +158,7 @@ class Conic:
             tuple: The bounding box coordinates (min_x, min_y), (max_x, max_y)
         """
         if not self.is_ellipse():
-            raise ValueError("Conic is not an ellipse")
+            return ((-100, -100), (100, 100))
 
         M = self.M/self.M[2, 2]  # Normalize the conic matrix
         # Compute the center of the ellipse

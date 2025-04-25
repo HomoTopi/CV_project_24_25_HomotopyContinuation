@@ -6,6 +6,8 @@ from HomoTopiContinuation.Losser import CircleLosser
 from HomoTopiContinuation.DataStructures.datastructures import Conics, Conic, SceneDescription, Circle
 from HomoTopiContinuation.SceneGenerator.scene_generator import SceneGenerator
 from HomoTopiContinuation.Rectifier.homotopyc_rectifier import HomotopyContinuationRectifier
+from HomoTopiContinuation.Rectifier.standard_rectifier import StandardRectifier
+from HomoTopiContinuation.Rectifier.numeric_rectifier import NumericRectifier
 from HomoTopiContinuation.ConicWarper.ConicWarper import ConicWarper
 
 
@@ -18,9 +20,9 @@ def objective(trial):
     """
     f = trial.suggest_float("f", 1, 10)
     y_rotation = trial.suggest_float("y_rotation", 0, 70)
-    offset_x = trial.suggest_float("offset_x", 0, 1)
-    offset_y = trial.suggest_float("offset_y", 0, 1)
-    offset_z = trial.suggest_float("offset_z", 1, 2)
+    offset_x = trial.suggest_float("offset_x", 0, 0)
+    offset_y = trial.suggest_float("offset_y", 0, 0)
+    offset_z = trial.suggest_float("offset_z", 2, 2)
     c1_centre_x = trial.suggest_float("c1_centre_x", -5, 10)
     c1_centre_y = trial.suggest_float("c1_centre_y", 0, 10)
     c1_radius = trial.suggest_float("c1_radius", 1, 10)
@@ -39,7 +41,7 @@ def objective(trial):
                                  circle1, circle2, circle3)
         scene_generator = SceneGenerator()
         image = scene_generator.generate_scene(scene)
-        rectifier = HomotopyContinuationRectifier()
+        rectifier = NumericRectifier()
         homography = rectifier.rectify(image.C_img)
         conic_warper = ConicWarper()
         warpedConics = conic_warper.warpConics(image.C_img, homography)
@@ -65,12 +67,12 @@ def experiment():
                     "c3_radius": [1.0, 10.0]}
     seed = 42
     study = optuna.create_study(
-        study_name="scene_opt_maximize",
+        study_name="scene_opt_maximize_randomSampler_NumericRectifier",
         storage=storage,
         load_if_exists=True,
-        direction="maximize",
+        direction="maximize"
     )
-    study.optimize(objective, n_trials=100)
+    study.optimize(objective, n_trials=300)
 
 
 if __name__ == "__main__":

@@ -24,9 +24,9 @@ def test_CircleLosser_computeEccentricityShouldReturnCorrectEccentricity():
     assert 0 < eccentricity < 1
 
     # Test case 3: Hyperbola (eccentricity > 1)
-    conic = Conic(np.array([[1, 0, -1],
-                            [0, -1, 0],
-                            [-1, 0, 1]]))
+    conic = Conic(np.array([[-2.10813559,  0.17186159,  7.6791946,],
+                            [0.17186159,  0.01631471,  0.10557325,],
+                            [7.6791946,   0.10557325, - 1.40891357,]]))
     eccentricity = CircleLosser.computeEccentricity(conic)
     assert eccentricity > 1
 
