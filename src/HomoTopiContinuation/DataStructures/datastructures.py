@@ -113,6 +113,95 @@ class Conic:
 
         return Conic(self.M + noise)
 
+    def is_ellipse(self) -> bool:
+        """
+        Check if the conic is an ellipse.
+        A conic is an ellipse if the determinant of the top-left 2x2 submatrix is positive.
+        """
+        A = self.M[:2, :2]
+        det_A = np.linalg.det(A)
+        return det_A > 0
+
+    def is_parabola(self) -> bool:
+        """
+        Check if the conic is a parabola.
+        A conic is a parabola if the determinant of the top-left 2x2 submatrix is zero.
+        """
+        A = self.M[:2, :2]
+        det_A = np.linalg.det(A)
+        return np.isclose(det_A, 0)
+
+    def center(self) -> np.ndarray:
+        """
+        Compute the center of the ellipse represented by the conic matrix.
+
+        Returns:
+            numpy.ndarray: The center of the ellipse
+        """
+        if self.is_parabola():
+            raise ValueError("Conic has no center because it is a parabola")
+
+        A = self.M[:2, :2]
+        b = self.M[:2, 2]
+        c = self.M[2, 2]
+
+        center = -np.linalg.inv(A) @ b
+        return center
+
+    def compute_bounding_box(self) -> tuple:
+        """
+        Compute the bounding box of the ellipse represented by the conic matrix.
+
+        If the conic is not an ellipse, return ((0, 0), (0, 0)).
+
+        Returns:
+            tuple: The bounding box coordinates (min_x, min_y), (max_x, max_y)
+        """
+        if not self.is_ellipse():
+            raise ValueError("Conic is not an ellipse")
+
+        M = self.M/self.M[2, 2]  # Normalize the conic matrix
+        # Compute the center of the ellipse
+        A = self.M[:2, :2]
+        b = self.M[:2, 2]
+        c = self.M[2, 2]
+
+        # Center of the ellipse
+        center = self.center()
+        cen_x, cen_y = center[0], center[1]
+
+        # Center the conic matrix
+        M = self.centered().M
+
+        # Compute semi-minor axes using the eigenvalues of the conic matrix
+        eigenvalues, _ = np.linalg.eig(M[:2, :2])
+        semi_axes = np.sqrt(1 / np.abs(eigenvalues))
+        semi_axes = np.abs(semi_axes)
+        semi_axes = np.real(semi_axes)
+        max_axis = np.max(semi_axes)
+
+        min_x, max_x = cen_x - max_axis, cen_x + max_axis
+        min_y, max_y = cen_y - max_axis, cen_y + max_axis
+
+        return ((min_x, min_y), (max_x, max_y))
+
+    def centered(self) -> 'Conic':
+        """
+        Center the conic matrix.
+
+        Returns:
+            Conic: The centered conic matrix
+        """
+        center = self.center()
+        A = self.M[:2, :2]
+        b = self.M[:2, 2]
+        c = self.M[2, 2]
+
+        # Center the conic matrix
+        k = c + b.T @ center + center.T @ b + center.T @ A @ center
+        M_centered = self.M.copy() / -k
+        return Conic(M_centered)
+
 
 class Conics:
     """
@@ -211,6 +300,7 @@ class Circle:
             [-self.center[0], -self.center[1], self.center[0]
                 ** 2 + self.center[1]**2 - self.radius**2]
         ])
+
         return Conic(conic)
 
 
