@@ -31,9 +31,9 @@ def test_CircleLosser_computeEccentricityShouldReturnCorrectEccentricity():
     assert eccentricity > 1
 
     # Test case 4: Parabola (eccentricity = 1)
-    conic = Conic(np.array([[0, 0, -1],
-                            [0, 0, 0],
-                            [-1, 0, 1]]))
+    conic = Conic(np.array([[-1, 0, 0],
+                            [0, 0, 0.5],
+                            [0, 0.5, 0]]))
     eccentricity = CircleLosser.computeEccentricity(conic)
     assert_almost_equal(eccentricity, 1.0)
 
@@ -65,3 +65,43 @@ def test_CircleLosser_computeEccentricityShouldReturnCorrectEccentricity():
                             [0, 0, -1e6]]))
     eccentricity = CircleLosser.computeEccentricity(conic)
     assert_almost_equal(eccentricity, 0.0)
+
+
+def test_CircleLosser_eccentricityInvariantTranslations():
+    # Helper function to compare floating-point numbers with tolerance
+    def assert_almost_equal(actual, expected, tol=1e-6):
+        assert abs(
+            actual - expected) <= tol, f"Expected {expected}, got {actual}"
+
+    # Test case 1: Circle (eccentricity = 0)
+    conic = Conic(np.array([[1, 0, 0],
+                            [0, 1, 0],
+                            [0, 0, -1]]))
+    eccentricity = CircleLosser.computeEccentricity(conic)
+    assert_almost_equal(eccentricity, 0.0)
+
+    # Test case 2: Circle with translation (eccentricity = 0)
+    conic_translated = Conic(np.array([[1, 0, 2],
+                                       [0, 1, 3],
+                                       [2, 3, -1]]))
+    eccentricity_translated = CircleLosser.computeEccentricity(
+        conic_translated)
+    assert_almost_equal(eccentricity_translated, 0.0)
+
+    # Test case 3: Ellipse (eccentricity < 1)
+    conic_ellipse = Conic(np.array([[2, 0, 0],
+                                    [0, 1, 0],
+                                    [0, 0, -1]]))
+    eccentricity_ellipse = CircleLosser.computeEccentricity(conic_ellipse)
+    assert 0 < eccentricity_ellipse < 1
+
+    # Test case 4: Ellipse with translation (eccentricity < 1)
+    conic_ellipse_translated = Conic(np.array([[2, 0, 2],
+                                               [0, 1, 3],
+                                               [2, 3, -1]]))
+    eccentricity_ellipse_translated = CircleLosser.computeEccentricity(
+        conic_ellipse_translated)
+    assert 0 < eccentricity_ellipse_translated < 1
+
+    assert np.isclose(eccentricity_ellipse, eccentricity_ellipse_translated,
+                      atol=1e-6), "Eccentricity should be invariant under translation"
