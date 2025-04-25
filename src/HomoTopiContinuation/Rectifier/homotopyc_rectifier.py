@@ -38,11 +38,8 @@ class HomotopyContinuationRectifier(Rectifier):
             Homography: The rectification homography
         """
 
-        script = self._get_script('Julia/rectify.jl')
         self.logger.info("Rectifying using HomotopyContinuation.jl")
         self.logger.debug(f"Conics: {C_img}")
-
-        self.logger.info(f"Evaluating script: {script}")
 
         # Extract algebraic parameters from conics
         a1, b1, c1, d1, e1, f1 = C_img.C1.to_algebraic_form()
@@ -85,16 +82,3 @@ class HomotopyContinuationRectifier(Rectifier):
         H = self._compute_h_from_svd(imDCCP)
 
         return H
-
-    def _get_script(self, filename: str) -> str:
-        """"
-        Get the script from the given filename.
-
-        Args:
-            filename (str): The name of the script file
-        Returns:
-            str: The script as a string
-        """
-        path = os.path.join(os.path.dirname(__file__), filename)
-        script = open(path, "r", encoding="utf8").read()
-        return script

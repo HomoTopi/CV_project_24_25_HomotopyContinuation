@@ -3,7 +3,7 @@
 # Sample docker build command:
 # docker build -f "Dockerfile" -t conicintersector "."
 
-FROM matlabruntime/r2024b/release/update5/108000000000000000
+FROM filomba/matlabruntime:r2024b-update5
 
 RUN apt-get update && apt-get upgrade -y
 
