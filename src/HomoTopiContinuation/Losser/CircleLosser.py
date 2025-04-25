@@ -19,62 +19,25 @@ class CircleLosser(SceneLosser):
         Returns:
             float: The eccentricity of the conic
         """
-        M = conic.M
-        # Normalize the conic matrix
-        if (conic.M[2, 2] != 0):
-            conic.M = conic.M / conic.M[2, 2]
+        # Check if the conic is degenerate
+        if np.linalg.det(conic.M) == 0:
+            return float('inf')
 
-        # Extract coefficients
-        A = M[0, 0]
-        B = 2*M[0, 1]
-        C = M[1, 1]
-        D = 2*M[0, 2]
-        E = 2*M[1, 2]
-        F = M[2, 2]
+        A = conic.M[:2, :2]
 
-        # Quadratic form and linear terms
-        Q = np.array([[A, B/2.], [B/2., C]])
-        L = np.array([D, E])
+        eigs, _ = np.linalg.eig(A)
+        det = np.linalg.det(A)
 
-        # Check for parabola: det(Q) == 0
-        detQ = np.linalg.det(Q)
-        if np.isclose(detQ, 0):
-            return 1.0  # Parabola eccentricity
+        if np.isclose(det, 0):
+            # Parabola
+            return 1.0
 
-        # Compute center of the conic: solve 2Q c + L = 0 => Q c = -L/2
-        center = -0.5 * np.linalg.inv(Q) @ L
+        denoms = 1/eigs
+        if det > 0:
+            # ellipse
+            return np.sqrt(1 - np.min(denoms)/np.max(denoms))
 
-        # Compute constant term after translation
-        F0 = center @ Q @ center + L @ center + F
-
-        # Eigenvalues of Q
-        evals, _ = np.linalg.eig(Q)
-        # Denominators for canonical form: lambda_i x_i^2 = -F0
-        denoms = -F0 / evals
-
-        # Filter only real denominators
-        if not np.all(np.isreal(denoms)):
-            raise ValueError("Conic parameters lead to non-real axis lengths.")
-        denoms = denoms.real
-
-        # Identify type
-        positive = denoms > 0
-        if positive.sum() == 2:
-            # Ellipse
-            a2, b2 = np.sort(denoms)[::-1]
-            if b2 <= 0:
-                raise ValueError("Invalid ellipse axes.")
-            e = np.sqrt(1 - b2/a2)
-        elif positive.sum() == 1:
-            # Hyperbola
-            # a^2 is the positive denom, b^2 is abs(negative denom)
-            a2 = denoms[positive][0]
-            b2 = abs(denoms[~positive][0])
-            e = np.sqrt(1 + b2/a2)
-        else:
-            return float('inf')  # Degenerate conic
-
-        return float(e)
+        return np.sqrt(1 + np.min(denoms)/np.max(denoms))
 
     def computeCircleLoss(sceneDescription: SceneDescription, C_computed: Conics) -> float:
         """
