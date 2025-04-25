@@ -122,14 +122,14 @@ class Plotter:
         self.ax.set_ylim3d([center[1] - radius, center[1] + radius])
         self.ax.set_zlim3d([center[2] - radius, center[2] + radius])
 
-    def plotConic2D(self, conic: Conic, x_range=(-1, 1, 100), y_range=(-1, 1, 100), conicName='Conic', color='r'):
+    def plotConic2D(self, conic: Conic, x_NPoints=100, y_NPoints=100, conicName='Conic', color='r'):
         """
         Plot a 2D conic.
 
         Args:
             conic (Conic): The conic to plot
-            x_range (tuple): The range of x values expressed as (start, end, number of points)
-            y_range (tuple): The range of y values expressed as (start, end, number of points)
+            x_NPoints (int): The number of points to plot the conic in x direction, default 100
+            y_NPoints (int): The number of points to plot the conic in y direction, default 100
             conicName (str): The name of the conic
             color (str): The color of the conic
 
@@ -141,8 +141,10 @@ class Plotter:
             raise ValueError("The current axis is not 2D.")
         a, b, c, d, e, f = conic.to_algebraic_form()
 
-        x = np.linspace(x_range[0], x_range[1], x_range[2])
-        y = np.linspace(y_range[0], y_range[1], y_range[2])
+        (x_min, y_min), (x_max, y_max) = conic.compute_bounding_box()
+
+        x = np.linspace(x_min, x_max, x_NPoints)
+        y = np.linspace(y_min, y_max, y_NPoints)
         X, Y = np.meshgrid(x, y)
 
         Z = a * X**2 + b * X * Y + c * Y**2 + d * X + e * Y + f
@@ -387,14 +389,14 @@ class Plotter:
             C3_best = img.C_img.C3.applyHomography(
                 h_true_inv)
             self.plotConic2D(
-                C1_best, conicName="Circle 1 Best", color='orange', x_range=(-2, 2, 100), y_range=(-2, 2, 100))
+                C1_best, conicName="Circle 1 Best", color='orange')
             self.plotConic2D(
-                C2_best, conicName="Circle 2 Best", color='orange', x_range=(-2, 2, 100), y_range=(-2, 2, 100))
+                C2_best, conicName="Circle 2 Best", color='orange')
             self.plotConic2D(
-                C3_best, conicName="Circle 3 Best", color='orange', x_range=(-2, 2, 100), y_range=(-2, 2, 100))
+                C3_best, conicName="Circle 3 Best", color='orange')
         self.drawLegend()
 
-    def plotExperiment(self, sceneDescription: sg.SceneDescription, img: Img, warpedConics: Conics, colorC1='r', colorC2='g', colorC3='b', name='Scene', warpedConicsDrawingSize=8, warpedConicsDrawingNPoints=100):
+    def plotExperiment(self, sceneDescription: sg.SceneDescription, img: Img, warpedConics: Conics, colorC1='r', colorC2='g', colorC3='b', name='Scene', warpedConicsDrawingNPoints=100):
         """
         Plot the experiment with the original image, the rectified image, and the 3D scene.
         This will produce four plots:
@@ -412,7 +414,6 @@ class Plotter:
             colorC2 (str, optional): The color for the plotting of the second conic. Defaults to 'g'.
             colorC3 (str, optional): The color for the plotting of the third conic. Defaults to 'b'.
             name (str, optional): The name of the scene. Defaults to 'Scene'.
-            warpedConicsDrawingSize (int, optional): The size of the drawing area for the conics. Defaults to 30.
             warpedConicsDrawingNPoints (int, optional): The number of points used draw the conics. Defaults to 100.
         """
         if (self.maxPlots < 4):
@@ -427,14 +428,12 @@ class Plotter:
 
         self.newAxis("Reconstructed Rectification", axisSame=True)
 
-        min_x, max_x = -warpedConicsDrawingSize, warpedConicsDrawingSize
-        min_y, max_y = -warpedConicsDrawingSize, warpedConicsDrawingSize
         self.plotConic2D(
-            warpedConics.C1, conicName="C1", color="red", x_range=(min_x, max_x, warpedConicsDrawingNPoints), y_range=(min_y, max_y, warpedConicsDrawingNPoints))
+            warpedConics.C1, conicName="C1", color="red", x_NPoints=warpedConicsDrawingNPoints, y_NPoints=warpedConicsDrawingNPoints)
         self.plotConic2D(
-            warpedConics.C2, conicName="C2", color="green", x_range=(min_x, max_x, warpedConicsDrawingNPoints), y_range=(min_y, max_y, warpedConicsDrawingNPoints))
+            warpedConics.C2, conicName="C2", color="green", x_NPoints=warpedConicsDrawingNPoints, y_NPoints=warpedConicsDrawingNPoints)
         self.plotConic2D(
-            warpedConics.C3, conicName="C3", color="blue", x_range=(min_x, max_x, warpedConicsDrawingNPoints), y_range=(min_y, max_y, warpedConicsDrawingNPoints))
+            warpedConics.C3, conicName="C3", color="blue", x_NPoints=warpedConicsDrawingNPoints, y_NPoints=warpedConicsDrawingNPoints)
 
     def show(self):
         """
