@@ -41,7 +41,7 @@ def objective(trial):
                                  circle1, circle2, circle3)
         scene_generator = SceneGenerator()
         image = scene_generator.generate_scene(scene)
-        rectifier = NumericRectifier()
+        rectifier = HomotopyContinuationRectifier()
         homography = rectifier.rectify(image.C_img)
         conic_warper = ConicWarper()
         warpedConics = conic_warper.warpConics(image.C_img, homography)
@@ -67,10 +67,11 @@ def experiment():
                     "c3_radius": [1.0, 10.0]}
     seed = 42
     study = optuna.create_study(
-        study_name="scene_opt_maximize_randomSampler_NumericRectifier",
+        study_name="scene_opt_maximize_randomSampler_HomotopicRectifier_True",
         storage=storage,
         load_if_exists=True,
         direction="maximize"
+        # sampler=optuna.samplers.RandomSampler(seed=seed)
     )
     study.optimize(objective, n_trials=300)
 
