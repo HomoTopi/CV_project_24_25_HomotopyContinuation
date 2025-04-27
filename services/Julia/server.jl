@@ -67,6 +67,7 @@ function process_rectification(params)
 
     #Compute the average of the solutions
     sols = [(sol_12 + sol_13 + sol_23) / 3 for (sol_12, sol_13, sol_23) in zip(sols_12, sols_13, sols_23)]
+    # sols = sols_12
     @info "sols=" * string(sols)
 
     # Define rectify_component function exactly as in rectify.jl

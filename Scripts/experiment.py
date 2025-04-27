@@ -19,7 +19,7 @@ class Rectifiers(Enum):
 def sceneDefinition() -> sg.SceneDescription:
     # Parameters
     f = 1
-    theta = 20
+    theta = 80
 
     # Define the circles
     c1 = Circle(
