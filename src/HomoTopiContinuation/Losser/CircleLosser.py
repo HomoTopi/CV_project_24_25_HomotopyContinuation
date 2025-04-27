@@ -32,9 +32,6 @@ class CircleLosser(SceneLosser):
             # Parabola
             return 1.0
 
-        print("det:", det)
-        print("eigs:", eigs)
-
         denoms = 1/eigs
         if det > 0:
             # ellipse

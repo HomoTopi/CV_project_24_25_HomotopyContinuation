@@ -100,6 +100,8 @@ class Rectifier(ABC):
         imDCCP = II @ JJ.T + JJ @ II.T
 
         # Threshold the dual conic to remove small values
+        imDCCP = np.where(np.imag(imDCCP) < self.treshold,
+                          np.real(imDCCP), imDCCP)
         imDCCP[np.abs(imDCCP) < self.treshold] = 0.0
 
         assert imDCCP.shape == (3, 3), "imDCCP must be a 3x3 matrix"

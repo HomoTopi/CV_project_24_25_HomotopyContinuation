@@ -215,7 +215,7 @@ class Plotter:
         self.ax.scatter(points[0], points[1], points[2],
                         label=conicName, color=color)
 
-    def plotCircle2D(self, circle: Circle, thetaResolution=100, color='r', name='Circle'):
+    def plotCircle2D(self, circle: Circle, thetaResolution=100, color='r', name='Circle', alpha=1.0):
         """
         Plot a 2D circle.
 
@@ -237,7 +237,7 @@ class Plotter:
         x = np.append(x, x[0])
         y = np.append(y, y[0])
 
-        self.ax.plot(x, y, color=color, label=name)
+        self.ax.plot(x, y, color=color, label=name, alpha=alpha)
 
     def plotCircle3D(self, circle: Circle, sceneDescription: sg.SceneDescription, thetaResolution=100, color='r', name='Circle'):
         """
@@ -372,13 +372,14 @@ class Plotter:
         self.scaleAxis3D()
 
         # Third plot (on the right)
+        alpha = 0.2 if (sceneDescription.noiseScale > 0) else 1.0
         self.newAxis(title="Rectified Image", axisSame=True)
         self.plotCircle2D(sceneDescription.circle1,
-                          name="Circle 1", color=colorC1)
+                          name="Circle 1", color=colorC1, alpha=alpha)
         self.plotCircle2D(sceneDescription.circle2,
-                          name="Circle 2", color=colorC2)
+                          name="Circle 2", color=colorC2, alpha=alpha)
         self.plotCircle2D(sceneDescription.circle3,
-                          name="Circle 3", color=colorC3)
+                          name="Circle 3", color=colorC3, alpha=alpha)
 
         if (sceneDescription.noiseScale > 0):
             h_true_inv = Homography(img.h_true.inv())
@@ -389,11 +390,11 @@ class Plotter:
             C3_best = img.C_img.C3.applyHomography(
                 h_true_inv)
             self.plotConic2D(
-                C1_best, conicName="Circle 1 Best", color='orange')
+                C1_best, conicName="Circle 1 Best", color=colorC1)
             self.plotConic2D(
-                C2_best, conicName="Circle 2 Best", color='orange')
+                C2_best, conicName="Circle 2 Best", color=colorC2)
             self.plotConic2D(
-                C3_best, conicName="Circle 3 Best", color='orange')
+                C3_best, conicName="Circle 3 Best", color=colorC3)
         self.drawLegend()
 
     def plotExperiment(self, sceneDescription: sg.SceneDescription, img: Img, warpedConics: Conics, colorC1='r', colorC2='g', colorC3='b', name='Scene', warpedConicsDrawingNPoints=100):

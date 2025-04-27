@@ -40,7 +40,7 @@ def sceneDefinition() -> sg.SceneDescription:
     print([float(p) for p in c3.to_conic().to_algebraic_form()])
 
     offset = np.array([0, 0, 2])
-    noiseScale = 0.05
+    noiseScale = 0.01
 
     return sg.SceneDescription(f, theta, offset, c1, c2, c3, noiseScale)
 
@@ -84,6 +84,10 @@ def main():
     print(warpedConics.C3.M)
 
     # Compute the loss
+    originalLoss = losser.computeCircleLoss(sceneDescription, img.C_img)
+    print("Original Loss:")
+    print(originalLoss)
+
     loss = losser.computeCircleLoss(sceneDescription, warpedConics)
     print("Loss:")
     print(loss)
