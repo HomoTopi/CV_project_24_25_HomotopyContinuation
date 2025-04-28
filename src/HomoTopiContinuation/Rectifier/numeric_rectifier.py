@@ -4,6 +4,7 @@ import requests
 import json
 from HomoTopiContinuation.Rectifier.rectifier import Rectifier
 from HomoTopiContinuation.DataStructures.datastructures import Conics, Homography, Conic
+from sklearn.cluster import KMeans
 
 class NumericRectifier(Rectifier):
     """
@@ -41,22 +42,52 @@ class NumericRectifier(Rectifier):
             result3 = self._call_intersect_conics_api(C2.M, C3.M)
 
             intersection_points = np.concatenate((result, result2, result3), axis=0)
-            self.logger.info("intersection_points: \n", intersection_points)
+            #self.logger.info(f"intersection_points: \n{intersection_points}")
             
-            # set to 0 elements inside the array under a treshold
-            intersection_points = self._clear_found_intersection_points(intersection_points)
-            filtered_points = self._get_common_intersection_points(intersection_points)
-            self.logger.info("filtered_points: \n", filtered_points)
-
+            # compute KNN searching for 2 clusters
+            filtered_points = self._get_KMeans_clusters(intersection_points)
+            
             # Create a homography matrix based on the points
             imDCCP = self.compute_imDCCP_from_solutions(filtered_points)
             H = self._compute_h_from_svd(imDCCP)
-            self.logger.info("H: \n", H.H)
+            #self.logger.info(f"H: \n{H.H}")
             return H
             
         except Exception as e:
             logging.error(f"Error in conic intersection API call: {e}")
             raise
+    
+    def _get_KMeans_clusters(self, intersection_points) -> np.ndarray:
+        """
+        Get the KMeans clusters from the intersection points
+        """
+        
+        N_CLUSTERS = 2
+         # remove real solutions
+        filtered_points = intersection_points[~np.all(np.isreal(intersection_points), axis=1)]
+        processed_points =  np.column_stack((filtered_points.real, filtered_points.imag))
+            
+        kmeans = KMeans(n_clusters=N_CLUSTERS, random_state=0).fit(processed_points)
+        
+        # convert back to complex numbers
+        filtered_points = np.zeros((N_CLUSTERS, 3), dtype=np.complex128)
+        reshaped_centers = kmeans.cluster_centers_.reshape(N_CLUSTERS,3,2)
+        #for i, e in enumerate(kmeans.cluster_centers_):
+        #    assert len(e) == 6, "the cluster center should have 6 elements"
+        #    filtered_points[i,:] = np.array([e[0] + e[1] * 1j, e[2] + e[3] * 1j, e[4] + e[5] * 1j])
+        
+        filtered_points = reshaped_centers[..., 0] + 1j * reshaped_centers[..., 1]
+        # set to 0 im or Re part if under the treshold
+        filtered_points.imag[np.abs(filtered_points.imag) < self.treshold] = 0.0
+        filtered_points.real[np.abs(filtered_points.real) < self.treshold] = 0.0
+        
+        #filtered_points = np.array(] )
+        print(filtered_points)
+        
+        assert len(filtered_points) == N_CLUSTERS, f"the filtered points should have {N_CLUSTERS} elements"
+        #self.logger.info(f"filtered_points: \n{filtered_points}")
+        
+        return filtered_points
     
     def _call_intersect_conics_api(self, conic1, conic2):
         """
