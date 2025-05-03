@@ -401,7 +401,7 @@ class Homography:
         H (numpy.ndarray): The homography matrix, it must be a 3x3 invertible matrix
     """
 
-    def __init__(self, H: np.ndarray, threshold: float = 1e-5):
+    def __init__(self, H: np.ndarray, threshold: float = 1e-6):
         """
         Initialize a Homography object.
         Set to 0 all the elements of H with a magnitude less than a threshold and
