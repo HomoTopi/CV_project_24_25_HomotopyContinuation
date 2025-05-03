@@ -38,6 +38,21 @@ class Rectifier(ABC):
         raise NotImplementedError(
             "Abstract method must be implemented by subclasses")
 
+    def _normalize_points(self, points: np.ndarray) -> np.ndarray:
+        """
+        Normalize the points
+        """
+        # for each row, normalize the vector wrt to the first element (if w = 0)
+        for i in range(len(points)):
+            if points[i,2] != 0:
+                points[i,:] = points[i,:] / points[i,2]
+            elif points[i,0] != 0:
+                points[i,:] = points[i,:] / points[i,0]
+            else:
+                self.logger.warning(f"Point {i} is not normalized: {points[i,:]}")
+
+        return points
+
     def _compute_h_from_svd(self, imDCCP: np.ndarray) -> Homography:
         """
         Compute the Homography from the SVD of the image dual conic.
