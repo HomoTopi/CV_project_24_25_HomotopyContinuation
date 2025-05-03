@@ -23,11 +23,11 @@ def sceneDefinition() -> sg.SceneDescription:
 
     # Define the circles
     c1 = Circle(
-        np.array([10, 100]), 5)
+        np.array([10+300, 100]), 5)
     c2 = Circle(
-        np.array([30, 100]), 5)
+        np.array([30+300, 100]), 5)
     c3 = Circle(
-        np.array([50, 100]), 5)
+        np.array([50+300, 100]), 5)
 
     print("Circle 1:")
     print(c1.to_conic().M)
@@ -40,7 +40,7 @@ def sceneDefinition() -> sg.SceneDescription:
     print([float(p) for p in c3.to_conic().to_algebraic_form()])
 
     offset = np.array([0, 0, 100])
-    noiseScale = 0.000003
+    noiseScale = 0.00000001
 
     return sg.SceneDescription(f, theta, offset, c1, c2, c3, noiseScale)
 
@@ -70,10 +70,10 @@ def main():
         return
 
     print("True Homography:")
-    print(img.h_true.H)
+    print(img.h_true.H / img.h_true.H[2, 2])
 
     print("Reconstructed Homography:")
-    print(H_reconstructed.H)
+    print(H_reconstructed.H / H_reconstructed.H[2, 2])
 
     # Warp The Circles
     warpedConics = ConicWarper().warpConics(img.C_img, H_reconstructed)
