@@ -19,15 +19,15 @@ class Rectifiers(Enum):
 def sceneDefinition() -> sg.SceneDescription:
     # Parameters
     f = 1
-    theta = 80
+    theta = 20
 
     # Define the circles
     c1 = Circle(
-        np.array([0, 0]), 1)
+        np.array([0, 0]), 10)
     c2 = Circle(
-        np.array([0, 0.5]), 1)
+        np.array([15, 0]), 10)
     c3 = Circle(
-        np.array([0, 0]), 1.5)
+        np.array([0, 0]), 15)
 
     print("Circle 1:")
     print(c1.to_conic().M)
@@ -39,14 +39,14 @@ def sceneDefinition() -> sg.SceneDescription:
     print(c3.to_conic().M)
     print([float(p) for p in c3.to_conic().to_algebraic_form()])
 
-    offset = np.array([0, 0, 2])
-    noiseScale = 0.01
+    offset = np.array([0, 0, 100])
+    noiseScale = 0
 
     return sg.SceneDescription(f, theta, offset, c1, c2, c3, noiseScale)
 
 
 def main():
-    rectifier = Rectifiers.homotopy.value
+    rectifier = Rectifiers.numeric.value
     losser = CircleLosser
 
     sceneDescription = sceneDefinition()

@@ -1,5 +1,3 @@
-using HTTP
-using JSON3
 using HomotopyContinuation
 using LinearAlgebra
 
@@ -125,43 +123,13 @@ function process_rectification(params)
     @info "normalized_smallest_solutions = " * string(smallest_solutions)
 
     return smallest_solutions
+
 end
 
-# --- HTTP Server Setup ---
-const ROUTER = HTTP.Router()
+# Example usage
+c_1 = [0.9, 0.0, 1.0, 0.0, 0.0, -1.0]
+c_2 = [1, 0.0, 1.2, -0.0, -1.0, -0.75]
+c_3 = [1.0, 0.0, 1.0, 0.0, 0.0, -2.25]
 
-# Health check endpoint
-HTTP.register!(ROUTER, "GET", "/health", req -> HTTP.Response(200, "OK"))
-
-# Rectification endpoint that matches exactly what rectify.jl does
-function handle_rectify(req::HTTP.Request)
-    try
-        # Parse JSON body
-        json_body = JSON3.read(IOBuffer(req.body))
-
-        # Expecting a structure like: {"conics": [c1_params, c2_params, c3_params]}
-        # where each cX_params is [a, b, c, d, e, f]
-        if !haskey(json_body, :conics) || length(json_body.conics) != 3 || !all(c -> length(c) == 6, json_body.conics)
-            return HTTP.Response(400, JSON3.write((error = "Invalid input format")))
-        end
-
-        # Flatten the parameters
-        params = vcat(Float64.(json_body.conics[1]), Float64.(json_body.conics[2]), Float64.(json_body.conics[3]))
-
-        # Run the rectification process
-        complex_sols = process_rectification(params)
-
-        # Format response to match rectify.jl output
-        response_body = JSON3.write((complex_sols=complex_sols,))
-        return HTTP.Response(200, ["Content-Type" => "application/json"], body=response_body)
-
-    catch e
-        return HTTP.Response(500, JSON3.write((error="Internal server error", details=sprint(showerror, e))))
-    end
-end
-
-HTTP.register!(ROUTER, "POST", "/rectify", handle_rectify)
-
-# --- Main Server Execution ---
-@info "Starting Julia Rectifier server on 0.0.0.0:8081..."
-HTTP.serve(ROUTER, "0.0.0.0", 8081)
+params = vcat(c_1, c_2, c_3)
+result = process_rectification(params)
