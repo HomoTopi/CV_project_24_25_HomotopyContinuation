@@ -401,7 +401,7 @@ class Homography:
         H (numpy.ndarray): The homography matrix, it must be a 3x3 invertible matrix
     """
 
-    def __init__(self, H: np.ndarray, threshold: float = 1e-6):
+    def __init__(self, H: np.ndarray, threshold: float = 1e-5):
         """
         Initialize a Homography object.
         Set to 0 all the elements of H with a magnitude less than a threshold and
@@ -418,7 +418,7 @@ class Homography:
             raise ValueError(f"Homography matrix must be 3×3, got {H.shape}")
         if np.abs(la.det(H)) < self.threshold:
             raise ValueError(
-                "Homography matrix must be invertible, det(H) = " + str(la.det(H)))
+                "Homography matrix must be invertible, det(H) = " + str(np.abs(la.det(H))) + " it should be higher than " + str(self.threshold))
 
         # set to 0 all the elements of H with a magnitude less than threshold
         H[np.abs(H) < self.threshold] = 0
