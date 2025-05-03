@@ -491,16 +491,18 @@ class Img:
         C_img (Conics): The pair of conics in the image
     """
 
-    def __init__(self, h_true: Homography, C_img: Conics):
+    def __init__(self, h_true: Homography, C_img: Conics, C_img_noise: Conics = None):
         """
         Initialize an Img object.
 
         Args:
             h_true (Homography): The true homography
             C_img (Conics): The pair of conics in the image
+            C_img_noise (Conics): The pair of conics in the image with noise
         """
         self.h_true = h_true
         self.C_img = C_img
+        self.C_img_noise = C_img_noise
 
     def to_json(self):
         """"

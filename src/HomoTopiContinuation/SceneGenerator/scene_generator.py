@@ -42,14 +42,21 @@ class SceneGenerator:
         H = SceneGenerator.compute_H(scene_description)
 
         # Apply homography to the true conics
-        C1 = C1_true.applyHomography(H).randomize(scene_description.noiseScale)
-        C2 = C2_true.applyHomography(H).randomize(scene_description.noiseScale)
-        C3 = C3_true.applyHomography(H).randomize(scene_description.noiseScale)
+        C1 = C1_true.applyHomography(H)
+        C2 = C2_true.applyHomography(H)
+        C3 = C3_true.applyHomography(H)
 
         conics = Conics(C1, C2, C3)
 
+        # Randomize the conics
+        C1_random = C1.randomize(scene_description.noiseScale)
+        C2_random = C2.randomize(scene_description.noiseScale)
+        C3_random = C3.randomize(scene_description.noiseScale)
+
+        conics_random = Conics(C1_random, C2_random, C3_random)
+
         # Create the Img object and store its JSON
-        return Img(H, conics)
+        return Img(H, conics, conics_random)
 
     @staticmethod
     def compute_H(scene_description: SceneDescription) -> Homography:
