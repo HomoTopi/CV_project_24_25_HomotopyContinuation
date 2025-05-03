@@ -45,7 +45,12 @@ class NumericRectifier(Rectifier):
             #self.logger.info(f"intersection_points: \n{intersection_points}")
             
             # compute KNN searching for 2 clusters
-            filtered_points = self._get_KMeans_clusters(intersection_points)
+            #filtered_points = self._get_KMeans_clusters(intersection_points)
+            
+            filtered_points = self._normalize_points(intersection_points)
+            
+            filtered_points = self._get_common_intersection_points(filtered_points)
+            filtered_points = self._clear_found_intersection_points(filtered_points)
             
             # Create a homography matrix based on the points
             imDCCP = self.compute_imDCCP_from_solutions(filtered_points)
@@ -72,18 +77,12 @@ class NumericRectifier(Rectifier):
         # convert back to complex numbers
         filtered_points = np.zeros((N_CLUSTERS, 3), dtype=np.complex128)
         reshaped_centers = kmeans.cluster_centers_.reshape(N_CLUSTERS,3,2)
+        
         #for i, e in enumerate(kmeans.cluster_centers_):
         #    assert len(e) == 6, "the cluster center should have 6 elements"
         #    filtered_points[i,:] = np.array([e[0] + e[1] * 1j, e[2] + e[3] * 1j, e[4] + e[5] * 1j])
         
         filtered_points = reshaped_centers[..., 0] + 1j * reshaped_centers[..., 1]
-        # set to 0 im or Re part if under the treshold
-        filtered_points.imag[np.abs(filtered_points.imag) < self.treshold] = 0.0
-        filtered_points.real[np.abs(filtered_points.real) < self.treshold] = 0.0
-        
-        #filtered_points = np.array(] )
-        print(filtered_points)
-        
         assert len(filtered_points) == N_CLUSTERS, f"the filtered points should have {N_CLUSTERS} elements"
         #self.logger.info(f"filtered_points: \n{filtered_points}")
         
@@ -170,12 +169,4 @@ class NumericRectifier(Rectifier):
         #remove imaginary parts if under the treshold
         intersection_points = np.real_if_close(intersection_points, tol=self.treshold)
           
-            
-        # for each row, normalize the vector wrt to the first element (if w = 0)
-        for i in range(len(intersection_points)):
-            if intersection_points[i,2] != 0:
-                intersection_points[i,:] = intersection_points[i,:] / intersection_points[i,2]
-            elif intersection_points[i,0] != 0:
-                intersection_points[i,:] = intersection_points[i,:] / intersection_points[i,0]
-
         return intersection_points
