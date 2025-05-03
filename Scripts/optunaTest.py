@@ -18,20 +18,22 @@ def objective(trial):
     and computes the eccentricities of the warped conics.
     The function returns the negative sum of the eccentricities as the objective value to minimize.
     """
-    f = trial.suggest_float("f", 1, 10)
-    y_rotation = trial.suggest_float("y_rotation", 0, 70)
+    maxPos = 500
+    maxRadius = 100
+    f = trial.suggest_float("f", 1, 5)
+    y_rotation = trial.suggest_float("y_rotation", 5, 20)
     offset_x = trial.suggest_float("offset_x", 0, 0)
     offset_y = trial.suggest_float("offset_y", 0, 0)
     offset_z = trial.suggest_float("offset_z", 2, 2)
-    c1_centre_x = trial.suggest_float("c1_centre_x", -5, 10)
-    c1_centre_y = trial.suggest_float("c1_centre_y", 0, 10)
-    c1_radius = trial.suggest_float("c1_radius", 1, 10)
-    c2_centre_x = trial.suggest_float("c2_centre_x", 0, 10)
-    c2_centre_y = trial.suggest_float("c2_centre_y", 0, 10)
-    c2_radius = trial.suggest_float("c2_radius", 1, 10)
-    c3_centre_x = trial.suggest_float("c3_centre_x", 0, 10)
-    c3_centre_y = trial.suggest_float("c3_centre_y", 0, 10)
-    c3_radius = trial.suggest_float("c3_radius", 1, 10)
+    c1_centre_x = trial.suggest_float("c1_centre_x", 0, maxPos)
+    c1_centre_y = trial.suggest_float("c1_centre_y", 0, maxPos)
+    c1_radius = trial.suggest_float("c1_radius", 1, maxRadius)
+    c2_centre_x = trial.suggest_float("c2_centre_x", 0, maxPos)
+    c2_centre_y = trial.suggest_float("c2_centre_y", 0, maxPos)
+    c2_radius = trial.suggest_float("c2_radius", 1, maxRadius)
+    c3_centre_x = trial.suggest_float("c3_centre_x", 0, maxPos)
+    c3_centre_y = trial.suggest_float("c3_centre_y", 0, maxPos)
+    c3_radius = trial.suggest_float("c3_radius", 1, maxRadius)
 
     try:
         circle1 = Circle(np.array([c1_centre_x, c1_centre_y]), c1_radius)
@@ -60,14 +62,14 @@ def experiment():
     load_dotenv()
 
     storage = (os.getenv("OPTUNA_DB_URL"))
-    search_space = {"f": [1, 10.0], "y_rotation": [0.5, 10.0],  "offset_x": [0.5, 1.0], "offset_y": [0.5, 1.0],
-                    "offset_z": [1.0, 2.0], "c1_centre_x": [-0.5, 10.0], "c1_centre_y": [0.0, 10.0],
-                    "c1_radius": [1.0, 10.0], "c2_centre_x": [0.0, 10.0], "c2_centre_y": [0.0, 10.0],
-                    "c2_radius": [1.0, 10.0], "c3_centre_x": [0.0, 10.0], "c3_centre_y": [0.0, 10.0],
-                    "c3_radius": [1.0, 10.0]}
+    search_space = {"f": [1, 10.0], "y_rotation": [0, 50],  "offset_x": [0, 0], "offset_y": [0, 0],
+                    "offset_z": [1.0, 1.0], "c1_centre_x": [0, 50.0], "c1_centre_y": [0.0, 50],
+                    "c1_radius": [1.0, 50], "c2_centre_x": [0.0, 50], "c2_centre_y": [0.0, 50],
+                    "c2_radius": [1.0, 50], "c3_centre_x": [0.0, 50], "c3_centre_y": [0.0, 50],
+                    "c3_radius": [1.0, 50]}
     seed = 42
     study = optuna.create_study(
-        study_name="scene_opt_maximize_randomSampler_HomotopicRectifier_True",
+        study_name="scene_opt_maximize_randomSampler_HomotopicRectifier_Not centered",
         storage=storage,
         load_if_exists=True,
         direction="maximize"

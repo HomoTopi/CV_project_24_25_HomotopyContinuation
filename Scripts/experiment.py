@@ -18,16 +18,16 @@ class Rectifiers(Enum):
 
 def sceneDefinition() -> sg.SceneDescription:
     # Parameters
-    f = 1
-    theta = 20
+    f = 100
+    theta = 70
 
     # Define the circles
     c1 = Circle(
-        np.array([0, 0]), 10)
+        np.array([10, 100]), 5)
     c2 = Circle(
-        np.array([15, 0]), 10)
+        np.array([30, 100]), 5)
     c3 = Circle(
-        np.array([0, 0]), 15)
+        np.array([50, 100]), 5)
 
     print("Circle 1:")
     print(c1.to_conic().M)
@@ -40,13 +40,13 @@ def sceneDefinition() -> sg.SceneDescription:
     print([float(p) for p in c3.to_conic().to_algebraic_form()])
 
     offset = np.array([0, 0, 100])
-    noiseScale = 0
+    noiseScale = 0.000003
 
     return sg.SceneDescription(f, theta, offset, c1, c2, c3, noiseScale)
 
 
 def main():
-    rectifier = Rectifiers.numeric.value
+    rectifier = Rectifiers.homotopy.value
     losser = CircleLosser
 
     sceneDescription = sceneDefinition()
@@ -56,7 +56,7 @@ def main():
     print("[Scene Generated]")
 
     try:
-        H_reconstructed = rectifier.rectify(img.C_img)
+        H_reconstructed = rectifier.rectify(img.C_img_noise)
     except Exception as e:
         print("[Rectification Failed]")
         print("Error:")

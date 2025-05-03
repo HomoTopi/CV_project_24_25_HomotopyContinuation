@@ -89,8 +89,8 @@ function process_rectification(params)
     # return
 
     # Solve the system using homotopy continuation
-    # res = solve(F, [x, y, lambda], show_progress=true, target_parameters=target_parameters)
-    res = solve(F, CircularPoints, show_progress=true, start_parameters=start_parameters, target_parameters=target_parameters)
+    res = solve(F, [x, y, lambda], show_progress=true, start_system=:total_degree, target_parameters=target_parameters)
+    # res = solve(F, CircularPoints, show_progress=true, start_parameters=start_parameters, target_parameters=target_parameters)
     @info "res = " * string(res)
 
     sols = solutions(res, only_real=true, only_finite=false, only_nonsingular=false)
@@ -108,10 +108,18 @@ function process_rectification(params)
     )
 
     # Find the indexes of the two smallest evaluated values of J
-    sorted_indices = sortperm(sols_evaluated)[1:2]
+    sorted_indices = sortperm(sols_evaluated)
     @info "sorted_indices = " * string(sorted_indices)
 
-    smallest_solutions = [real(sols[i]) for i in sorted_indices]
+    smallest_solution = sorted_indices[1]
+    for s in sorted_indices
+        if norm(smallest_solution - s) > threshold
+            smallest_solution = [smallest_solution; s]
+            break
+        end
+    end
+
+    smallest_solutions = [real(sols[i]) for i in smallest_solution]
     @info "smallest_solutions = " * string(smallest_solutions)
 
     #Structure the solutions as complex numbers
