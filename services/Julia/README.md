@@ -113,3 +113,104 @@ conics = [
 solutions = rectify_conics(conics)
 print(solutions)
 ``` 
+
+# Homotopy Continuation application
+
+The algorithm used in this service is based on the `HomotopyContinuation.jl` package, which provides a robust framework for solving systems of polynomial equations.
+
+## Background & goal
+A generic circle whose center is at $(x_0, y_0)$ and whose radius is $r$, is described by the equation $(x-x_0)^2 + (y-y_0)^2 - r^2 = 0$ that can be homogenized to $x^2 + y^2 -2x_0xw - 2y_0yw + (x_0^2 + y_0^2 - r^2)w^2 = 0$. By intersecting a circle with the line at infinity $w=0$ we get:
+
+$$
+\begin{cases}
+x^2 + y^2 - 2x_0xw - 2y_0yw + (x_0^2 + y_0^2 - r^2)w^2 = 0 \\
+w = 0
+\end{cases}
+$$
+
+That yields $x^2 + y^2 = 0$ solved by $y = \pm i x$. The solutions are thus $[x, ix, 0]^T$ and $[x, -ix, 0]^T$ since we are using homogenous coordinates both vectors can be divided by $x$ to get the solutions $I = [1, i, 0]^T$ and $J = [1, -i, 0]^T$. These are called **Circular Points** and since we have not made any assumptions about the circles we can conclude that they are shared by all circles.
+
+When an Homography is applied to a plane, knowing the images of the circular points is enough to compute a rectifing homography. That's because it is easy to prove that the circular points are invariant under similarities and thus finding an homography that maps them back to their original position is enough to perform shape reconstruction.
+
+Since the circular points are shared by all circles, their images under an homography are shared by all the images of circles under the same homography.
+
+The images of the circular points can thus be found as the intersection of three images of three different circles, and that's the goal of this service. 
+
+## Standard intersection
+Given a generic Homography described by the invertible matrix $H \in \mathbb{R}^{3 \times 3}$, and a circle described by the symmetric matrix $C^* \in \mathbb{R}^{3 \times 3}$, the image of the circle under the homography is given by the matrix $C = H^{-T} C^* H^{-1}$ and it is usually an ellipse. 
+
+A point $z \in \mathbb{C}^3$ belongs to a conic if $z^T C z = 0$. Thus, given the images of three distinct circles $C_1, C_2, C_3$ we can find the images of the circular points as the solutions of the following system of equations:
+$$
+\begin{cases}
+z^T C_1 z = 0 \\
+z^T C_2 z = 0 \\
+z^T C_3 z = 0
+\end{cases}
+$$
+
+This system is a polynomial system of degree 2 in the variables $z = [x, y, w]^T$ and can be solved using the `HomotopyContinuation.jl` package. 
+
+This method works well when the images of the circles are noiseless but the extraction of the images of the circles is usually noisy and thus the systems quickly becomes solutionless.
+
+## Optimization problem
+In order to deal with the noise we can aim to find the point $z$ that best fits the system of equations without necessarily being a solution. Let's start by considering a single conic rappresented by the symmetric matrix $C \in \mathbb{R}^{3 \times 3}$. We are looking for a point $z^* \in \mathbb{C}^3$ such that:
+$$
+z^* = \arg\min_{z \in \mathbb{C}^3} ||z^T C z||^2_2$$
+The $L_2$ norm squared of a generic complex vector $t=[t_1, t_2, t_3]^T, t_{1,2,3} \in \mathbb{C}$ where $t_i$ can be written as $t_i = a_i + i b_i, a_i, b_i \in \mathbb{R}$ is defined as:
+$$
+||t||^2_2 = \sum_{i=1}^3 |t_i|^2 = \sum_{i=1}^3 (a_i^2 + b_i^2)
+$$
+
+Let's remember that we are working in homogenous coordinates and thus a constraint must be added to deal with the scale of the vector $z$. 
+
+The chosen constraint if $g(z) = ||z||^2_2 - 1 = 0$. The problem thus becomes:
+$$
+z^* = \arg\min_{z \in \mathbb{C}^3} ||z^T C z||^2_2 \quad \\ \text{s.t.} \quad g(z) = 0
+$$
+
+Unfortunatley the HomotopyContinuation.jl package does not allow to access the real and imaginary parts of the complex variables and thus we need to convert the problem into a real optimization problem. 
+
+This can be done by expressing the complex vector $z$ as $z = x+ iy$ where $x,y \in \mathbb{R}^3$. The objective function can be rewritten as:
+$$
+||z^T C z||^2_2 = ||(x+iy)^T C (x+iy)||^2_2 = \\
+||x^T C x - y^T C y + i y^T C x + i x^T C y ||^2_2 = \\
+||x^T C x - y^T C y||^2_2 + ||2 x^t C y||^2_2
+$$
+
+While the constraint becomes:
+$$
+g(z) = ||z||^2_2 - 1 =\\
+||x+iy||^2_2 - 1 = \\
+||x||^2_2 + ||y||^2_2 - 1 = 0
+$$
+
+The real optimization problem is thus:
+$$
+z^* = \arg\min_{x,y \in \mathbb{R}^3} ||x^T C x - y^T C y||^2_2 + ||2 x^t C y||^2_2 \quad \\ \text{s.t.} \quad g(z) = 0
+$$
+
+Adding baack the three conics $C_1, C_2, C_3$ we get the following optimization problem:
+$$
+z^* = \arg\min_{x,y \in \mathbb{R}^3} \sum_{i=1}^3 ||x^T C_i x - y^T C_i y||^2_2 + ||2 x^t C_i y||^2_2 \quad \\ \text{s.t.} \quad g(z) = 0
+$$
+
+To solve this constrained optimization problem we can use the Lagrange multipliers method. The Lagrangian function is defined as:
+$$
+\mathcal{L}(x, y, \lambda) = \sum_{i=1}^3 ||x^T C_i x - y^T C_i y||^2_2 + ||2 x^t C_i y||^2_2 + \lambda g(z)
+$$
+
+Where $\lambda$ is the Lagrange multiplier. The Lagrangian function combines the objective function and the constraint into a single function. The term $\lambda g(z)$ penalizes any violation of the constraint $g(z) = 0$.
+
+The optimal solution can be found by taking the partial derivatives of the Lagrangian with respect to $x$, $y$, and $\lambda$, and setting them to zero. This gives us a system of equations that we can solve for the optimal values of $x$, $y$, and $\lambda$.
+
+$$
+\begin{cases}
+\frac{\partial \mathcal{L}}{\partial x} = 0 \\
+\frac{\partial \mathcal{L}}{\partial y} = 0 \\
+\frac{\partial \mathcal{L}}{\partial \lambda} = 0
+\end{cases}
+$$
+
+This system of equations is polynomial and it is thus solvable using the `HomotopyContinuation.jl` package.
+
+The solutions found are just stationary points of the Lagrangian function and thus they need to be evaluated to find the global minima.
