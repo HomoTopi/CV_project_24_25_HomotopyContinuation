@@ -1,4 +1,4 @@
-from HomoTopiContinuation.DataStructures.datastructures import Circle
+from HomoTopiContinuation.DataStructures.datastructures import Circle, DistortionParams
 import numpy as np
 import HomoTopiContinuation.Plotter.Plotter as Plotter
 import HomoTopiContinuation.SceneGenerator.scene_generator as sg
@@ -19,15 +19,15 @@ class Rectifiers(Enum):
 def sceneDefinition() -> sg.SceneDescription:
     # Parameters
     f = 1
-    theta = 80
+    theta = 88.9999
 
     # Define the circles
     c1 = Circle(
-        np.array([0, 0]), 1)
+        np.array([2, 2]), 10)
     c2 = Circle(
-        np.array([0, 0.5]), 1)
+        np.array([0, 0]), 1)
     c3 = Circle(
-        np.array([0, 0]), 1.5)
+        np.array([0, 0]), 0.5)
 
     print("Circle 1:")
     print(c1.to_conic().M)
@@ -41,18 +41,18 @@ def sceneDefinition() -> sg.SceneDescription:
 
     offset = np.array([0, 0, 2])
     noiseScale = 0.01
-
+    
     return sg.SceneDescription(f, theta, offset, c1, c2, c3, noiseScale)
 
 
 def main():
-    rectifier = Rectifiers.homotopy.value
+    rectifier = Rectifiers.numeric.value
     losser = CircleLosser
-
+    distortion_Params = DistortionParams(0.0001, 0.1, 0, 0, 0)
     sceneDescription = sceneDefinition()
     print("[Scene Described]")
 
-    img = sg.SceneGenerator().generate_scene(sceneDescription)
+    img = sg.SceneGenerator().generate_scene(sceneDescription, distortion_Params=distortion_Params)
     print("[Scene Generated]")
 
     try:
