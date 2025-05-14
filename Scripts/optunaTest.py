@@ -32,6 +32,18 @@ def objective(trial):
     c3_centre_x = trial.suggest_float("c3_centre_x", 0, 10)
     c3_centre_y = trial.suggest_float("c3_centre_y", 0, 10)
     c3_radius = trial.suggest_float("c3_radius", 1, 10)
+    
+    
+    ## distortion params ###
+    
+    # Radial distortion
+    k1 = trial.suggest_uniform('k1', -1.5, 0.0)    # strong barrel → mild
+    k2 = trial.suggest_uniform('k2', -0.5, 0.5)    # second‑order radial
+    k3 = trial.suggest_uniform('k3', -0.1, 0.1)    # optional 6th‑order term
+
+    # Tangential distortion
+    p1 = trial.suggest_uniform('p1', -0.01, 0.01)  # usually very small
+    p2 = trial.suggest_uniform('p2', -0.01, 0.01)
 
     try:
         circle1 = Circle(np.array([c1_centre_x, c1_centre_y]), c1_radius)
