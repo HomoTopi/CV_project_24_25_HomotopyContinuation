@@ -1,6 +1,11 @@
 import numpy as np
 from numpy import linalg as la
 
+CIRCULAR_POINTS = np.array([
+    [1, 1j, 0],
+    [1, -1j, 0]
+]).T
+
 
 class Conic:
     """
@@ -503,6 +508,7 @@ class Img:
         self.h_true = h_true
         self.C_img = C_img
         self.C_img_noise = C_img_noise
+        self.imCircularPoints = h_true.H @ CIRCULAR_POINTS
 
     def to_json(self):
         """"
