@@ -3,7 +3,6 @@ from HomoTopiContinuation.DataStructures.datastructures import SceneDescription,
 import HomoTopiContinuation.Plotter.Plotter as Plotter
 import json
 import logging
-import cv2
 import matplotlib.pyplot as plt
 class SceneGenerator:
     """
@@ -27,7 +26,7 @@ class SceneGenerator:
         )
         self.logger = logging.getLogger(self.__class__.__name__)
 
-    def generate_scene(self, scene_description: SceneDescription, nPoints: int = 100, distortion_Params: DistortionParams = None) -> Img:
+    def generate_scene(self, scene_description: SceneDescription, nPoints: int = 100, distortion_Params: DistortionParams = None, debug: bool = False) -> Img:
         """
         Construct the matrices of the two circles and the homography from the scene description.
         Apply the homography to the true conics (circles) to get the warped conics.
@@ -50,36 +49,46 @@ class SceneGenerator:
             C2_points = scene_description.circle2.sample_points(20)
             C3_points = scene_description.circle3.sample_points(20)
             
-            # plot the points with matplotlib
-            plt.scatter(C1_points[:, 0], C1_points[:, 1], c='red', label='C1')
-            plt.scatter(C2_points[:, 0], C2_points[:, 1], c='blue', label='C2')
-            plt.scatter(C3_points[:, 0], C3_points[:, 1], c='green', label='C3')
-            plt.legend()
-            plt.show()
+            if debug:
+                # plot the points with matplotlib
+                plt.scatter(C1_points[:, 0], C1_points[:, 1], c='red', label='C1')
+                plt.scatter(C2_points[:, 0], C2_points[:, 1], c='blue', label='C2')
+                plt.scatter(C3_points[:, 0], C3_points[:, 1], c='green', label='C3')
+                plt.axis('equal')
+                plt.legend()
+                plt.show()
+            
+            # fit the homography
+            C1_points = np.dot(H.H, C1_points.T).T
+            C2_points = np.dot(H.H, C2_points.T).T
+            C3_points = np.dot(H.H, C3_points.T).T
+            
+        
+            C1_points = C1_points / C1_points[:, [2]]
+            C2_points = C2_points / C2_points[:, [2]]
+            C3_points = C3_points / C3_points[:, [2]]
             
             # apply distortion to the points
             C1_points = self._apply_distortion(C1_points, distortion_Params, scene_description)
             C2_points = self._apply_distortion(C2_points, distortion_Params, scene_description)
             C3_points = self._apply_distortion(C3_points, distortion_Params, scene_description)
             
-            # plot the points with matplotlib
-            plt.scatter(C1_points[:, 0], C1_points[:, 1], c='red', label='C1')
-            plt.scatter(C2_points[:, 0], C2_points[:, 1], c='blue', label='C2')
-            plt.scatter(C3_points[:, 0], C3_points[:, 1], c='green', label='C3')
-            plt.legend()
-            plt.show()
+            if debug:
+                # plot the points with matplotlib
+                plt.scatter(C1_points[:, 0], C1_points[:, 1], c='red', label='C1')
+                plt.scatter(C2_points[:, 0], C2_points[:, 1], c='blue', label='C2')
+                plt.scatter(C3_points[:, 0], C3_points[:, 1], c='green', label='C3')
+                plt.axis('equal')
+                plt.legend()
+                plt.show()
             
-            # fit the Homography from the distorted points
-            C1_points_plotted = np.reshape(H.H @ C1_points.T, (-1, 3))
-            C2_points_plotted = np.reshape(H.H @ C2_points.T, (-1, 3))
-            C3_points_plotted = np.reshape(H.H @ C3_points.T, (-1, 3))
-
-            print(C1_points_plotted)
+            
+            
             # fit the Conics from the distorted points
-            C1 = Conic.fit_conic(C1_points_plotted)
-            print(C1.M)
-            C2 = Conic.fit_conic(C2_points_plotted)
-            C3 = Conic.fit_conic(C3_points_plotted)
+            #C1 = Conic.fit_conic(C1_points)
+            #print(C1.M)
+            #C2 = Conic.fit_conic(C2_points)
+            #C3 = Conic.fit_conic(C3_points)
             
             # randomize the conics
             #C1 = C1.randomize(scene_description.noiseScale)
@@ -87,7 +96,6 @@ class SceneGenerator:
             #C3 = C3.randomize(scene_description.noiseScale)
             
             
-            exit()
             
         else:
             C1 = C1_true.applyHomography(H).randomize(scene_description.noiseScale)
