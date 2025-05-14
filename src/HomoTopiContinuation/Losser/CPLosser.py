@@ -16,7 +16,16 @@ class CPLosser():
         normalized_trueCP = trueCP / trueCP[:, [0]]
         normalized_computedCP = computedCP / computedCP[:, [0]]
 
+        # print("Normalized True Circular Points:")
+        # print(normalized_trueCP)
+
         distances = np.linalg.norm(
             normalized_trueCP - normalized_computedCP, axis=1)
 
-        return np.max(distances)
+        loss1 = np.max(distances)
+
+        distances = np.linalg.norm(
+            normalized_trueCP[::-1] - normalized_computedCP, axis=1)
+        loss2 = np.max(distances)
+
+        return np.min([loss1, loss2])
