@@ -34,7 +34,11 @@ end
 
 function process_rectification(params)
     I = [1, im, 0.0]
+    #Add small noise
+    I = I + randn(ComplexF64, 3) * 1e-3
     J = [1, -im, 0.0]
+    #Add small noise
+    J = J + randn(ComplexF64, 3) * 1e-3
     CircularPoints = vcat([I], [J])
 
     #Base system
@@ -100,7 +104,7 @@ function process_rectification(params)
         show_progress=true)
     @info "res=" * string(res)
 
-    sols = solutions(res; only_finite=false, only_nonsingular=true)
+    sols = solutions(res; only_finite=false, only_nonsingular=false)
     @info "sols_input=" * string(sols)
 
     # Define rectify_component function exactly as in rectify.jl

@@ -22,12 +22,29 @@ class Rectifier(ABC):
         self.logger = logging.getLogger(self.__class__.__name__)
 
     @abstractmethod
-    def rectify(self, C_img: Conics) -> Homography:
+    def computeImagesOfCircularPoints(self, C_img: Conics) -> np.ndarray:
         """
-        Rectify a pair of conics to recover the homography.
+        Compute the image of the circular points.
 
         Args:
-            C_img (Conics): A pair of conics in the image
+            C_img (Conics): A triplet of conics in the image
+
+        Returns:
+            np.ndarray: The image of the circular points
+
+        Raises:
+            NotImplementedError: This is an abstract method that must be implemented by subclasses
+        """
+        raise NotImplementedError(
+            "Abstract method must be implemented by subclasses")
+
+    @abstractmethod
+    def rectify(self, C_img: Conics, returnCP: bool = False) -> Homography:
+        """
+        Rectify a triplet of conics to recover the homography.
+
+        Args:
+            C_img (Conics): A triplet of conics in the image
 
         Returns:
             Homography: The rectification homography
@@ -44,12 +61,13 @@ class Rectifier(ABC):
         """
         # for each row, normalize the vector wrt to the first element (if w = 0)
         for i in range(len(points)):
-            if points[i,2] != 0:
-                points[i,:] = points[i,:] / points[i,2]
-            elif points[i,0] != 0:
-                points[i,:] = points[i,:] / points[i,0]
+            if points[i, 2] != 0:
+                points[i, :] = points[i, :] / points[i, 2]
+            elif points[i, 0] != 0:
+                points[i, :] = points[i, :] / points[i, 0]
             else:
-                self.logger.warning(f"Point {i} is not normalized: {points[i,:]}")
+                self.logger.warning(
+                    f"Point {i} is not normalized: {points[i,:]}")
 
         return points
 
