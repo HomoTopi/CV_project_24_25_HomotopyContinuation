@@ -20,7 +20,7 @@ class Rectifiers(Enum):
 def sceneDefinition() -> sg.SceneDescription:
     # Parameters
     f = 1
-    theta = 1
+    theta = 30
 
     # Define the circles
     c1 = Circle(
@@ -41,7 +41,7 @@ def sceneDefinition() -> sg.SceneDescription:
     print([float(p) for p in c3.to_conic().to_algebraic_form()])
 
     offset = np.array([0, 0, 10])
-    noiseScale = 0.01
+    noiseScale = 0.00
 
     return sg.SceneDescription(f, theta, offset, c1, c2, c3, noiseScale)
 
@@ -102,6 +102,11 @@ def main():
     cpLoss = CPLosser.computeLoss(img.imCircularPoints.T, imCPsReconstructed)
     print("Loss of the Circular Points:")
     print(cpLoss)
+
+    print("Repositioned Circular Points:")
+    ripositionedCP = H_reconstructed.H @ imCPsReconstructed.T
+    ripositionedCP = ripositionedCP.T / ripositionedCP.T[:, [0]]
+    print(ripositionedCP)
 
     # Plot the results
     plotter = Plotter.Plotter(2, 2, title="Experiment")

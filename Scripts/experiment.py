@@ -40,7 +40,7 @@ def sceneDefinition() -> sg.SceneDescription:
     print([float(p) for p in c3.to_conic().to_algebraic_form()])
 
     offset = np.array([0, 0, 100])
-    noiseScale = 0.00000001
+    noiseScale = 0.00000003
 
     return sg.SceneDescription(f, theta, offset, c1, c2, c3, noiseScale)
 
