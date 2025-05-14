@@ -19,11 +19,11 @@ class Rectifiers(Enum):
 def sceneDefinition() -> sg.SceneDescription:
     # Parameters
     f = 1
-    theta = 88.9999
+    theta = 2
 
     # Define the circles
     c1 = Circle(
-        np.array([2, 2]), 10)
+        np.array([2, 2]), 2)
     c2 = Circle(
         np.array([0, 0]), 1)
     c3 = Circle(
@@ -48,7 +48,7 @@ def sceneDefinition() -> sg.SceneDescription:
 def main():
     rectifier = Rectifiers.numeric.value
     losser = CircleLosser
-    distortion_Params = DistortionParams(0.0001, 0.1, 0, 0, 0)
+    distortion_Params = DistortionParams(-0.15,  0.05, 0.001, 0.001, 0.0)
     sceneDescription = sceneDefinition()
     print("[Scene Described]")
 
@@ -71,6 +71,16 @@ def main():
 
     print("True Homography:")
     print(img.h_true.H)
+    
+    print("Image Conics")
+    
+    assert img.C_img.C1.is_ellipse() , "the Image Conic 1 is not an ellipse"
+    assert img.C_img.C2.is_ellipse() , "the Image Conic 2 is not an ellipse"
+    assert img.C_img.C3.is_ellipse() , "the Image Conic 3 is not an ellipse"
+    
+    print(img.C_img.C1.M)
+    print(img.C_img.C2.M)
+    print(img.C_img.C3.M)
 
     print("Reconstructed Homography:")
     print(H_reconstructed.H)
@@ -80,9 +90,7 @@ def main():
     print("[Conics Warped]")
     print("Warped Conics:")
     print(warpedConics.C1.M)
-    print(warpedConics.C2.M)
-    print(warpedConics.C3.M)
-
+    
     # Compute the loss
     originalLoss = losser.computeCircleLoss(sceneDescription, img.C_img)
     print("Original Loss:")
