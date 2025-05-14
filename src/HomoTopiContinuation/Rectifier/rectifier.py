@@ -39,7 +39,7 @@ class Rectifier(ABC):
             "Abstract method must be implemented by subclasses")
 
     @abstractmethod
-    def rectify(self, C_img: Conics) -> Homography:
+    def rectify(self, C_img: Conics, returnCP: bool = False) -> Homography:
         """
         Rectify a triplet of conics to recover the homography.
 

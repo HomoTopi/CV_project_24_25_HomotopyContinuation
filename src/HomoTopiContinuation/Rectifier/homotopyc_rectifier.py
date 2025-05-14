@@ -66,7 +66,7 @@ class HomotopyContinuationRectifier(Rectifier):
         self.logger.info(f"Result: {solutions}")
         return solutions
 
-    def rectify(self, C_img: Conics) -> Homography:
+    def rectify(self, C_img: Conics, returnCP: bool = False) -> Homography:
         """
         Rectify a pair of conics using the Julia Homotopy Continuation package.
 
@@ -83,6 +83,8 @@ class HomotopyContinuationRectifier(Rectifier):
         imDCCP = self.compute_imDCCP_from_solutions(solutions)
         H = self._compute_h_from_svd(imDCCP)
 
+        if returnCP:
+            return H, solutions
         return H
 
 

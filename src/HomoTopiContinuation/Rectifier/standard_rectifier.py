@@ -53,7 +53,7 @@ class StandardRectifier(Rectifier):
 
         return sols
 
-    def rectify(self, C_img: Conics) -> Homography:
+    def rectify(self, C_img: Conics, returnCP: bool = False) -> Homography:
         """
         Rectify a pair of conics using SymPy.
 
@@ -71,6 +71,8 @@ class StandardRectifier(Rectifier):
         # TODO: compute the rectification homography both by svd and by a fully homotopy continuation approach
         H = self._compute_h_from_svd(imDCCP)
 
+        if returnCP:
+            return H, sols
         return H
 
 

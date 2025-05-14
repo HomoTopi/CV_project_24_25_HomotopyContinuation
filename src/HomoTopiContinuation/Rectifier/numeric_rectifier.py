@@ -51,7 +51,7 @@ class NumericRectifier(Rectifier):
             logging.error(f"Error in conic intersection API call: {e}")
             raise
 
-    def rectify(self, C_img: Conics) -> Homography:
+    def rectify(self, C_img: Conics, returnCP: bool = False) -> Homography:
         """
         Rectify a pair of conics using numerical intersection conic method.
 
@@ -68,6 +68,8 @@ class NumericRectifier(Rectifier):
         imDCCP = self.compute_imDCCP_from_solutions(filtered_points)
         H = self._compute_h_from_svd(imDCCP)
         # self.logger.info(f"H: \n{H.H}")
+        if returnCP:
+            return H, filtered_points
         return H
 
     def _get_KMeans_clusters(self, intersection_points) -> np.ndarray:
