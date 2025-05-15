@@ -122,7 +122,7 @@ class Plotter:
         self.ax.set_ylim3d([center[1] - radius, center[1] + radius])
         self.ax.set_zlim3d([center[2] - radius, center[2] + radius])
 
-    def plotConic2D(self, conic: Conic, x_NPoints=100, y_NPoints=100, conicName='Conic', color='r'):
+    def plotConic2D(self, conic: Conic, x_NPoints=100, y_NPoints=100, conicName='Conic', color='r', alpha=1.0):
         """
         Plot a 2D conic.
 
@@ -149,7 +149,7 @@ class Plotter:
 
         Z = a * X**2 + b * X * Y + c * Y**2 + d * X + e * Y + f
 
-        cs = self.ax.contour(X, Y, Z, levels=[0], colors=color)
+        cs = self.ax.contour(X, Y, Z, levels=[0], colors=color, alpha=alpha)
         plt.clabel(cs, inline=True, fontsize=10, fmt=conicName)
 
     def plotCamera(self, center=np.array([0.0, 0.0, 0.0]), yaw=0, pitch=0, roll=0, size=.2, color='blue', bodyRatio=0.5):
@@ -351,11 +351,24 @@ class Plotter:
             raise ValueError(
                 "Maximum number of plots reached. Please create a new figure.")
 
+        alpha = 0.2 if (sceneDescription.noiseScale > 0) else 1.0
+
         # First plot (on the Left)
         self.newAxis(title="Original Image", axisSame=True)
-        self.plotConic2D(img.C_img.C1, conicName="Conic 1", color=colorC1)
-        self.plotConic2D(img.C_img.C2, conicName="Conic 2", color=colorC2)
-        self.plotConic2D(img.C_img.C3, conicName="Conic 3", color=colorC3)
+        self.plotConic2D(
+            img.C_img.C1, conicName="Conic 1 Original", color=colorC1, alpha=alpha)
+        self.plotConic2D(
+            img.C_img.C2, conicName="Conic 2 Original", color=colorC2, alpha=alpha)
+        self.plotConic2D(
+            img.C_img.C3, conicName="Conic 3 Original", color=colorC3, alpha=alpha)
+
+        if (sceneDescription.noiseScale > 0):
+            self.plotConic2D(
+                img.C_img_noise.C1, conicName="Conic 1 Noisy", color=colorC1)
+            self.plotConic2D(
+                img.C_img_noise.C2, conicName="Conic 2 Noisy", color=colorC2)
+            self.plotConic2D(
+                img.C_img_noise.C3, conicName="Conic 3 Noisy", color=colorC3)
         self.drawLegend()
 
         # Second plot (in the middle)
@@ -372,7 +385,6 @@ class Plotter:
         self.scaleAxis3D()
 
         # Third plot (on the right)
-        alpha = 0.2 if (sceneDescription.noiseScale > 0) else 1.0
         self.newAxis(title="Rectified Image", axisSame=True)
         self.plotCircle2D(sceneDescription.circle1,
                           name="Circle 1", color=colorC1, alpha=alpha)
@@ -383,11 +395,11 @@ class Plotter:
 
         if (sceneDescription.noiseScale > 0):
             h_true_inv = Homography(img.h_true.inv())
-            C1_best = img.C_img.C1.applyHomography(
+            C1_best = img.C_img_noise.C1.applyHomography(
                 h_true_inv)
-            C2_best = img.C_img.C2.applyHomography(
+            C2_best = img.C_img_noise.C2.applyHomography(
                 h_true_inv)
-            C3_best = img.C_img.C3.applyHomography(
+            C3_best = img.C_img_noise.C3.applyHomography(
                 h_true_inv)
             self.plotConic2D(
                 C1_best, conicName="Circle 1 Best", color=colorC1)

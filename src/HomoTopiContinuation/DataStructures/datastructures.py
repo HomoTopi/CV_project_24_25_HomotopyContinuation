@@ -1,6 +1,11 @@
 import numpy as np
 from numpy import linalg as la
 
+CIRCULAR_POINTS = np.array([
+    [1, 1j, 0],
+    [1, -1j, 0]
+]).T
+
 
 class DistortionParams:
     """
@@ -477,7 +482,7 @@ class Homography:
             raise ValueError(f"Homography matrix must be 3×3, got {H.shape}")
         if np.abs(la.det(H)) < self.threshold:
             raise ValueError(
-                "Homography matrix must be invertible, det(H) = " + str(la.det(H)))
+                "Homography matrix must be invertible, det(H) = " + str(np.abs(la.det(H))) + " it should be higher than " + str(self.threshold))
 
         # set to 0 all the elements of H with a magnitude less than threshold
         H[np.abs(H) < self.threshold] = 0
@@ -550,16 +555,19 @@ class Img:
         C_img (Conics): The pair of conics in the image
     """
 
-    def __init__(self, h_true: Homography, C_img: Conics):
+    def __init__(self, h_true: Homography, C_img: Conics, C_img_noise: Conics = None):
         """
         Initialize an Img object.
 
         Args:
             h_true (Homography): The true homography
             C_img (Conics): The pair of conics in the image
+            C_img_noise (Conics): The pair of conics in the image with noise
         """
         self.h_true = h_true
         self.C_img = C_img
+        self.C_img_noise = C_img_noise
+        self.imCircularPoints = h_true.H @ CIRCULAR_POINTS
 
     def to_json(self):
         """"

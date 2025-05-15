@@ -35,8 +35,20 @@ function process_rectification(params)
     res = solve(F, [x]; show_progress=true)
     # F = System([df_dxi, df_dxr, df_dyi, df_dyr, df_dzi, df_dzr])
     # res = solve(F, [xr, xi, yr, yi, zr, zi]; show_progress=true)
-    sols = solutions(res; only_finite=false, only_nonsingular=true)
+    sols = solutions(res; only_finite=false, only_nonsingular=false)
     @info "sols=" * string(sols)
+
+    #Evaluate the system at the solutions
+    evaluated_solutions = [subs([f_1, f_2, f_3], x => sol) for sol in sols]
+    evaluated_solutions = [[norm(Complex{Float64}(sol_)) for sol_ in sol] for sol in evaluated_solutions]
+    evaluated_solutions = [sum(sol) for sol in evaluated_solutions]
+    @info "evaluated_solutions=" * string(evaluated_solutions)
+
+    #Take the two sollutions with the smallest evaluated_solutions
+    smallest_indices = sortperm(evaluated_solutions)[1:2]
+    @info "smallest_indices=" * string(smallest_indices)
+    smallest_solutions = [sols[i] for i in smallest_indices]
+    @info "smallest_solutions=" * string(smallest_solutions)
 
     # Define rectify_component function exactly as in rectify.jl
     rectify_component(z) = complex(
@@ -45,11 +57,11 @@ function process_rectification(params)
     )
 
     #Normalize the smallest solutions by dividing by the first element of the solution vector
-    sols = [sol / sol[1] for sol in sols]
+    smallest_solutions = [sol / sol[1] for sol in smallest_solutions]
 
     # Apply rectification to components
-    complex_sols = [map(rectify_component, sol) for sol in sols]
-
+    complex_sols = [map(rectify_component, sol) for sol in smallest_solutions]
+    @info "complex_sols=" * string(complex_sols)
     return complex_sols
 end
 

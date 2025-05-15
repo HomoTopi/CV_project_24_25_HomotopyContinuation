@@ -27,17 +27,7 @@ class HomotopyContinuationRectifier(Rectifier):
         self.service_url = f"http://{DOMAIN}:{PORT}/{SERVICE}"
         super().__init__()
 
-    def rectify(self, C_img: Conics) -> Homography:
-        """
-        Rectify a pair of conics using the Julia Homotopy Continuation package.
-
-        Returns:
-            Homography: The rectification homography
-        """
-
-        self.logger.info("Rectifying using HomotopyContinuation.jl")
-        self.logger.debug(f"Conics: {C_img}")
-
+    def computeImagesOfCircularPoints(self, C_img: Conics) -> np.ndarray:
         # Extract algebraic parameters from conics
         a1, b1, c1, d1, e1, f1 = C_img.C1.to_algebraic_form()
         a2, b2, c2, d2, e2, f2 = C_img.C2.to_algebraic_form()
@@ -74,10 +64,27 @@ class HomotopyContinuationRectifier(Rectifier):
                               for sol_tuple in solutions])
 
         self.logger.info(f"Result: {solutions}")
+        return solutions
+
+    def rectify(self, C_img: Conics, returnCP: bool = False) -> Homography:
+        """
+        Rectify a pair of conics using the Julia Homotopy Continuation package.
+
+        Returns:
+            Homography: The rectification homography
+        """
+
+        self.logger.info("Rectifying using HomotopyContinuation.jl")
+        self.logger.debug(f"Conics: {C_img}")
+
+        # Compute the images of the circular points
+        solutions = self.computeImagesOfCircularPoints(C_img)
 
         imDCCP = self.compute_imDCCP_from_solutions(solutions)
         H = self._compute_h_from_svd(imDCCP)
 
+        if returnCP:
+            return H, solutions
         return H
 
 
