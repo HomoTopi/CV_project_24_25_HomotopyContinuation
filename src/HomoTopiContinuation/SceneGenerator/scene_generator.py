@@ -26,7 +26,7 @@ class SceneGenerator:
         )
         self.logger = logging.getLogger(self.__class__.__name__)
 
-    def generate_scene(self, scene_description: SceneDescription, nPoints: int = 100, distortion_Params: DistortionParams = None, debug: bool = False) -> Img:
+    def generate_scene(self, scene_description: SceneDescription, nPoints: int = 100, distortion_Params = None, debug: bool = False) -> Img:
         """
         Construct the matrices of the two circles and the homography from the scene description.
         Apply the homography to the true conics (circles) to get the warped conics.
@@ -44,10 +44,12 @@ class SceneGenerator:
         
         
         if distortion_Params is not None:
+            self.logger.info("Distortion params provided, using distorted conics")
+            print("Distortion params provided, using distorted conics")
             # sample some points on the circles to be used for the distortion
-            C1_points = scene_description.circle1.sample_points(20)
-            C2_points = scene_description.circle2.sample_points(20)
-            C3_points = scene_description.circle3.sample_points(20)
+            C1_points = scene_description.circle1.sample_points(100)
+            C2_points = scene_description.circle2.sample_points(100)
+            C3_points = scene_description.circle3.sample_points(100)
             
             if debug:
                 # plot the points with matplotlib
@@ -85,19 +87,17 @@ class SceneGenerator:
             
             
             # fit the Conics from the distorted points
-            #C1 = Conic.fit_conic(C1_points)
-            #print(C1.M)
-            #C2 = Conic.fit_conic(C2_points)
-            #C3 = Conic.fit_conic(C3_points)
+            C1 = Conic.fit_conic(C1_points)
+            C2 = Conic.fit_conic(C2_points)
+            C3 = Conic.fit_conic(C3_points)
             
             # randomize the conics
             #C1 = C1.randomize(scene_description.noiseScale)
             #C2 = C2.randomize(scene_description.noiseScale)
             #C3 = C3.randomize(scene_description.noiseScale)
-            
-            
-            
         else:
+            self.logger.info("No distortion params provided, using true conics")
+            print("No distortion params provided, using true conics")
             C1 = C1_true.applyHomography(H).randomize(scene_description.noiseScale)
             C2 = C2_true.applyHomography(H).randomize(scene_description.noiseScale)
             C3 = C3_true.applyHomography(H).randomize(scene_description.noiseScale)
