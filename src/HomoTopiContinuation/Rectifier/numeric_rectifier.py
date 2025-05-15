@@ -69,7 +69,7 @@ class NumericRectifier(Rectifier):
         H = self._compute_h_from_svd(imDCCP)
         # self.logger.info(f"H: \n{H.H}")
         if returnCP:
-            return H, filtered_points
+            return H, filtered_points[:2]
         return H
 
     def _get_KMeans_clusters(self, intersection_points) -> np.ndarray:
@@ -183,10 +183,10 @@ class NumericRectifier(Rectifier):
         Args:
             intersection_points: Array of intersection points"""
 
-        intersection_points[np.abs(intersection_points) < self.treshold] = 0.0
+        intersection_points[np.abs(intersection_points) < self.threshold] = 0.0
 
         # remove imaginary parts if under the treshold
         intersection_points = np.real_if_close(
-            intersection_points, tol=self.treshold)
+            intersection_points, tol=self.threshold)
 
         return intersection_points

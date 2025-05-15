@@ -12,8 +12,8 @@ class Rectifier(ABC):
     This class defines the interface that all rectifiers must implement.
     """
 
-    def __init__(self, treshold: float = 1e-3):
-        self.treshold = treshold
+    def __init__(self, threshold: float = 1e-6):
+        self.threshold = threshold
         logging.basicConfig(
             filename='rectifier.log',
             format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -133,9 +133,9 @@ class Rectifier(ABC):
         imDCCP = II @ JJ.T + JJ @ II.T
 
         # Threshold the dual conic to remove small values
-        imDCCP = np.where(np.imag(imDCCP) < self.treshold,
+        imDCCP = np.where(np.imag(imDCCP) < self.threshold,
                           np.real(imDCCP), imDCCP)
-        imDCCP[np.abs(imDCCP) < self.treshold] = 0.0
+        imDCCP[np.abs(imDCCP) < self.threshold] = 0.0
 
         assert imDCCP.shape == (3, 3), "imDCCP must be a 3x3 matrix"
 

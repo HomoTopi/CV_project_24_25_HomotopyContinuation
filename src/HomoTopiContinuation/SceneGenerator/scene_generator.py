@@ -78,8 +78,8 @@ class SceneGenerator:
         y_rotation = np.radians(scene_description.y_rotation)
 
         # Intrinsic matrix (assuming natural camera and principal point at (0,0))
-        K = np.array([[f, 0, 0],
-                      [0, f, 0],
+        K = np.array([[f, 0, 100],
+                      [0, f, 100],
                       [0, 0, 1]])
 
         # Reference frame
