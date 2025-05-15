@@ -18,8 +18,8 @@ class Rectifiers(Enum):
 
 def sceneDefinition() -> sg.SceneDescription:
     # Parameters
-    f = 1
-    theta = 2
+    f = 13
+    theta = 80
 
     # Define the circles
     c1 = Circle(
@@ -46,13 +46,14 @@ def sceneDefinition() -> sg.SceneDescription:
 
 
 def main():
-    rectifier = Rectifiers.numeric.value
+    rectifier = Rectifiers.homotopy.value
     losser = CircleLosser
-    distortion_Params = DistortionParams(-0.15,  0.05, 0.001, 0.001, 0.0)
+    distortion_Params = DistortionParams(k1=-0.35, k2=0.5, p1=0.001, p2=0.001, k3=0.0)
     sceneDescription = sceneDefinition()
     print("[Scene Described]")
 
-    img = sg.SceneGenerator().generate_scene(sceneDescription, distortion_Params=distortion_Params)
+    #img = sg.SceneGenerator().generate_scene(sceneDescription, distortion_Params=distortion_Params, debug=True)
+    img = sg.SceneGenerator().generate_scene(sceneDescription, debug=True)
     print("[Scene Generated]")
 
     try:
