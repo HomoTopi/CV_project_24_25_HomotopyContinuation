@@ -1,5 +1,6 @@
 import numpy as np
 from numpy import linalg as la
+import jax.numpy as jnp
 
 CIRCULAR_POINTS = np.array([
     [1, 1j, 0],
@@ -143,8 +144,8 @@ class Conic:
         Returns:
             numpy.ndarray: The center of the ellipse
         """
-        if self.is_parabola():
-            raise ValueError("Conic has no center because it is a parabola")
+        # if self.is_parabola():
+        #     raise ValueError("Conic has no center because it is a parabola")
 
         A = self.M[:2, :2]
         b = self.M[:2, 2]
@@ -206,6 +207,76 @@ class Conic:
         k = c + b.T @ center + center.T @ b + center.T @ A @ center
         M_centered = self.M.copy() / -k
         return Conic(M_centered)
+
+
+class ConicJax:
+    """
+    Representation of a conic section using a 3x3 symmetric matrix in JAX.
+    A conic with algebraic form given by ax² + bxy + cy² + dx + ey + f = 0
+    is represented as the matrix
+
+    a b/2 d/2
+    b/2 c e/2
+    d/2 e/2 f
+
+    Attributes:
+        M (jax.numpy.ndarray): A 3x3 symmetric matrix representing the conic
+    """
+
+    def generateFromConic(conic: 'Conic') -> 'ConicJax':
+        """
+        Generate a ConicJax object from a Conic object.
+
+        Args:
+            conic (Conic): The conic object to convert
+
+        Returns:
+            ConicJax: The converted conic in JAX format
+        """
+        return ConicJax(jnp.array(conic.M))
+
+    def __init__(self, M: jnp.ndarray):
+        """
+        Initialize a ConicJax object.
+
+        Args:
+            M (jax.numpy.ndarray): A 3x3 symmetric matrix
+
+        Raises:
+            ValueError: If M is not a 3x3 matrix or not symmetric
+        """
+        # if M.shape != (3, 3):
+        #     raise ValueError(f"Conic matrix must be 3×3, got {M.shape}")
+
+        # if not jnp.allclose(M, M.T):
+        #     raise ValueError("Conic matrix must be symmetric")
+
+        self._M = M
+
+    def computeSemiAxes(self) -> jnp.ndarray:
+        """
+        Compute the semi-axes of the conic.
+
+        Returns:
+            jnp.ndarray: The semi-axes of the conic
+        """
+        eigvals = jnp.linalg.eigvalsh(self._M[:2, :2])
+        semi_axes = jnp.sqrt(1 / jnp.abs(eigvals))
+        return semi_axes
+
+    def applyHomographyFromInv(self, H_inv: jnp.ndarray) -> 'ConicJax':
+        """
+        Apply a homography to the conic using the inverse of the homography.
+
+        Args:
+            H_inv (jax.numpy.ndarray): The inverse of the homography matrix
+
+        Returns:
+            ConicJax: The conic after applying the homography
+        """
+        # assert H_inv.shape == (3, 3), "H_inv must be a 3x3 matrix"
+        # assert jnp.linalg.det(H_inv) != 0, "H_inv must be invertible"
+        return ConicJax(H_inv.T @ self._M @ H_inv)
 
 
 class Conics:
@@ -273,6 +344,33 @@ class Conics:
         json_str['C2'] = np.array(json_str['C2'])
         json_str['C3'] = np.array(json_str['C3'])
         return Conics(Conic(json_str['C1']), Conic(json_str['C2']), Conic(json_str['C3']))
+
+
+class ConicsJax:
+    def __init__(self, Conics: Conics):
+        """
+        Initialize a ConicsJax object from a Conics object.
+        Args:
+            Conics (Conics): The conics object to convert
+        """
+        self.C1 = ConicJax.generateFromConic(Conics.C1)
+        self.C2 = ConicJax.generateFromConic(Conics.C2)
+        self.C3 = ConicJax.generateFromConic(Conics.C3)
+
+    def __iter__(self):
+        """
+        Return an iterator over the conics.
+        """
+        return iter([self.C1, self.C2, self.C3])
+
+    def getConicsArray(self) -> jnp.ndarray:
+        """
+        Get the conics as a JAX array.
+
+        Returns:
+            jnp.ndarray: The conics as a JAX array
+        """
+        return [self.C1, self.C2, self.C3]
 
 
 class Circle:

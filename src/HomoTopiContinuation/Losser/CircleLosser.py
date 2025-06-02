@@ -27,11 +27,6 @@ class CircleLosser(SceneLosser):
 
         eigs, _ = np.linalg.eig(A)
         det = np.linalg.det(A)
-
-        if np.isclose(det, 0):
-            # Parabola
-            return 1.0
-
         denoms = 1/eigs
         if det > 0:
             # ellipse
