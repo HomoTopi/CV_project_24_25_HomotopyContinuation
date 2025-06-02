@@ -1,4 +1,4 @@
-from HomoTopiContinuation.DataStructures.datastructures import Circle
+from HomoTopiContinuation.DataStructures.datastructures import Circle, DistortionParams
 import numpy as np
 import HomoTopiContinuation.Plotter.Plotter as Plotter
 import HomoTopiContinuation.SceneGenerator.scene_generator as sg
@@ -48,11 +48,12 @@ def sceneDefinition() -> sg.SceneDescription:
 def main():
     rectifier = Rectifiers.homotopy.value
     losser = CircleLosser
-
+    distortion_Params = DistortionParams(k1=-0.35, k2=0.5, p1=0.001, p2=0.001, k3=0.0)
     sceneDescription = sceneDefinition()
     print("[Scene Described]")
 
-    img = sg.SceneGenerator().generate_scene(sceneDescription)
+    #img = sg.SceneGenerator().generate_scene(sceneDescription, distortion_Params=distortion_Params, debug=True)
+    img = sg.SceneGenerator().generate_scene(sceneDescription, debug=True)
     print("[Scene Generated]")
 
     try:
@@ -71,6 +72,16 @@ def main():
 
     print("True Homography:")
     print(img.h_true.H / img.h_true.H[2, 2])
+    
+    print("Image Conics")
+    
+    assert img.C_img.C1.is_ellipse() , "the Image Conic 1 is not an ellipse"
+    assert img.C_img.C2.is_ellipse() , "the Image Conic 2 is not an ellipse"
+    assert img.C_img.C3.is_ellipse() , "the Image Conic 3 is not an ellipse"
+    
+    print(img.C_img.C1.M)
+    print(img.C_img.C2.M)
+    print(img.C_img.C3.M)
 
     print("Reconstructed Homography:")
     print(H_reconstructed.H / H_reconstructed.H[2, 2])
@@ -80,9 +91,7 @@ def main():
     print("[Conics Warped]")
     print("Warped Conics:")
     print(warpedConics.C1.M)
-    print(warpedConics.C2.M)
-    print(warpedConics.C3.M)
-
+    
     # Compute the loss
     originalLoss = losser.computeCircleLoss(sceneDescription, img.C_img)
     print("Original Loss:")

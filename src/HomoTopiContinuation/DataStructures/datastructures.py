@@ -8,6 +8,17 @@ CIRCULAR_POINTS = np.array([
 ]).T
 
 
+class DistortionParams:
+    """
+    Parameters for the distortion of the conic.
+    """
+    def __init__(self, k1: float, k2: float, p1: float, p2: float, k3: float):
+        self.k1 = k1
+        self.k2 = k2
+        self.p1 = p1
+        self.p2 = p2
+        self.k3 = k3
+
 class Conic:
     """
     Representation of a conic section using a 3x3 symmetric matrix.
@@ -118,6 +129,44 @@ class Conic:
         noise = noise / 2
 
         return Conic(self.M + noise)
+
+    @staticmethod
+    def fit_conic(points: np.ndarray) -> 'Conic':
+        """
+        Fit a conic to a set of points applying a least squares method.
+        
+        Args:
+            points (numpy.ndarray): Array of shape (N, 2) containing N points (x,y)
+            
+        Returns:
+            Conic: The fitted conic
+        """
+        A = np.zeros((points.shape[0], 6))
+        for i in range(points.shape[0]):
+            A[i] = np.array([points[i, 0]**2, points[i, 0] * points[i, 1], points[i, 1]**2, points[i, 0], points[i, 1], 1])
+        
+        # Apply constraint f=1 (rightmost coefficient is 1)
+        # This solves the homogeneous system Ax=0 with the constraint
+        if points.shape[0] > 5:  # Need at least 5 points for a unique solution
+            # Normalize last column to 1
+            A_prime = A[:, :5]
+            b = -A[:, 5]
+            params = np.linalg.lstsq(A_prime, b, rcond=None)[0]
+            coef = np.append(params, 1.0)  # [a, b, c, d, e, f=1]
+        else:
+            raise ValueError("At least 6 points are required to fit a conic")
+        
+        # Convert algebraic form to matrix form
+        # [a b/2 d/2]
+        # [b/2 c e/2]
+        # [d/2 e/2 f]
+        M = np.array([
+            [coef[0], coef[1]/2, coef[3]/2],
+            [coef[1]/2, coef[2], coef[4]/2],
+            [coef[3]/2, coef[4]/2, coef[5]]
+        ])
+        
+        return Conic(M)
 
     def is_ellipse(self) -> bool:
         """
@@ -405,6 +454,16 @@ class Circle:
         ])
 
         return Conic(conic)
+
+    def sample_points(self, n: int) -> np.ndarray:
+        """
+        Sample n points on the circle.
+        """
+        theta = np.linspace(0, 2 * np.pi, n, endpoint=False)
+        x = self.center[0] + self.radius * np.cos(theta)
+        y = self.center[1] + self.radius * np.sin(theta)
+        z = np.ones(n)
+        return np.vstack((x, y, z)).T  # shape (N, 3)
 
 
 class SceneDescription:
