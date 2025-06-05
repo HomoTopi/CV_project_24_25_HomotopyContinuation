@@ -2,7 +2,7 @@ import numpy as np
 import jax.numpy as jnp
 import jax
 from HomoTopiContinuation.DataStructures.datastructures import Circle, ConicJax, ConicsJax, Homography, Conics
-
+from tqdm.notebook import tqdm
 from .rectifier import Rectifier
 
 
@@ -23,47 +23,96 @@ class GDRectifier(Rectifier):
 
     def lossConics(H_inv: jnp.array, conics: ConicsJax, weights: jnp.array) -> float:
         weights /= jnp.sum(weights)
-        return jnp.sum(
-            jnp.array([
-                GDRectifier.loss(H_inv, conics.C1) * weights[0],
-                GDRectifier.loss(H_inv, conics.C2) * weights[1],
-                GDRectifier.loss(H_inv, conics.C3) * weights[2]
-            ])
-        )
+        loss1 = GDRectifier.loss(H_inv, conics.C1)
+        loss2 = GDRectifier.loss(H_inv, conics.C2)
+        loss3 = GDRectifier.loss(H_inv, conics.C3)
+
+        softMax = jnp.exp(jnp.array([loss1, loss2, loss3]))
+        softMax /= jnp.sum(softMax)
+
+        softweightedAverage = jnp.sum(
+            softMax * jnp.array([loss1, loss2, loss3]))
+        return softweightedAverage
+
+        # return jnp.max(
+        #     jnp.array([
+        #         GDRectifier.loss(H_inv, conics.C1) * weights[0],
+        #         GDRectifier.loss(H_inv, conics.C2) * weights[1],
+        #         GDRectifier.loss(H_inv, conics.C3) * weights[2]
+        #     ])
+        # )
     lossConics = jax.jit(lossConics, static_argnames=['conics'])
 
     gradient = jax.grad(lossConics, argnums=0)
     gradient = jax.jit(gradient, static_argnames=['conics'])
 
-    def rectify(C_img: Conics, iterations: int = 20000, alpha: float = 0.00000001, beta: float = 0.9, weights=jnp.array([1.0, 1.0, 1.0]), gradientCap=5.0) -> Homography:
+    def rectify(C_img: Conics, iterations: int = 20000, alpha: float = 1e-8, beta1: float = 0.9, beta2: float = 0.999, epsilon: float = 1e-8, weights=jnp.array([1.0, 1.0, 1.0]), gradientCap=5.0) -> Homography:
+        """
+        Performs rectification of conics using gradient descent with Adam optimization.
+        Args:
+            C_img (Conics): The input conics to be rectified.
+            iterations (int, optional): Number of optimization iterations. Default is 20000.
+            alpha (float, optional): Learning rate for the Adam optimizer. Default is 1e-8.
+            beta1 (float, optional): Exponential decay rate for the first moment estimates in Adam. Default is 0.9.
+            beta2 (float, optional): Exponential decay rate for the second moment estimates in Adam. Default is 0.999.
+            epsilon (float, optional): Small constant for numerical stability in Adam. Default is 1e-8.
+            weights (jnp.ndarray, optional): Weights for the loss function. Default is jnp.array([1.0, 1.0, 1.0]).
+            gradientCap (float, optional): Maximum allowed gradient norm for gradient clipping. Default is 5.0.
+        Returns:
+            Homography: The final estimated homography after rectification.
+            list[Homography]: List of homographies at each iteration.
+            list[float]: List of loss values at each iteration.
+            jnp.ndarray: Array of gradients at each iteration.
+            jnp.ndarray: Array of first moment vectors (m) at each iteration.
+            jnp.ndarray: Array of second moment vectors (v) at each iteration.
+        Notes:
+            - Uses Adam optimizer for updating the inverse homography matrix.
+            - Tracks the optimization process by storing homographies, losses, gradients, and optimizer states.
+            - Prints the loss at each iteration for monitoring convergence.
+        """
         warpedConics = ConicsJax(C_img)
         H_inv = jnp.eye(3)
-        # # add noise to the initial homography
-        # key = jax.random.PRNGKey(0)
-        # noise = 0.00001 * jax.random.normal(key, H_inv.shape)
-        # H_inv += noise
+        m = jnp.zeros_like(H_inv)
         v = jnp.zeros_like(H_inv)
 
         Hs = []
         losses = []
         grads = []
+        ms = []
         vs = []
 
-        for i in range(iterations):
-            grad = GDRectifier.gradient(H_inv, warpedConics, weights=weights)
-            gradNorm = jnp.linalg.norm(grad)
-            gradNormMinned = jnp.min(jnp.array([gradNorm, gradientCap]))
-            grad = grad / gradNorm * gradNormMinned
-            v = beta * v + (1 - beta) * grad
-            H_inv = H_inv - alpha * v
-            current_loss = GDRectifier.lossConics(
-                H_inv, warpedConics, weights=weights)
-            print(f"Iteration {i}, Loss: {current_loss}")
-            H = jnp.linalg.inv(H_inv)
-            Hs.append(Homography(np.array(H)))
-            losses.append(current_loss)
-            grads.append(grad)
-            vs.append(v)
+        with tqdm(range(1, iterations+1)) as pbar:
+            for i in pbar:
+                grad = GDRectifier.gradient(
+                    H_inv, warpedConics, weights=weights)
+                # Ensure the homography is a projective transformation
+                gradNorm = jnp.linalg.norm(grad)
+                gradNormMinned = jnp.minimum(gradNorm, gradientCap)
+                grad = grad / (gradNorm + 1e-8) * gradNormMinned
+                # grad = grad.at[2, 0].set(0.0)
 
+                m = beta1 * m + (1 - beta1) * grad
+                v = beta2 * v + (1 - beta2) * (grad ** 2)
+
+                m_hat = m / (1 - beta1 ** i)
+                v_hat = v / (1 - beta2 ** i)
+
+                current_loss = GDRectifier.lossConics(
+                    H_inv, warpedConics, weights=weights)
+
+                pbar.set_postfix({"Loss": float(current_loss)})
+
+                H = jnp.linalg.inv(H_inv)
+                Hs.append(Homography(np.array(H)))
+                losses.append([
+                    GDRectifier.loss(H_inv, warpedConics.C1),
+                    GDRectifier.loss(H_inv, warpedConics.C2),
+                    GDRectifier.loss(H_inv, warpedConics.C3),
+                    current_loss])
+                grads.append(grad)
+                ms.append(m)
+                vs.append(v)
+
+                H_inv = H_inv - alpha * m_hat / (jnp.sqrt(v_hat) + epsilon)
         H = jnp.linalg.inv(H_inv)
-        return Homography(np.array(H)), Hs, losses, jnp.array(grads), jnp.array(vs)
+        return Homography(np.array(H)), Hs, np.array(losses), jnp.array(grads), jnp.array(ms), jnp.array(vs)
