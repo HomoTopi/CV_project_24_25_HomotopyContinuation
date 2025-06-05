@@ -34,7 +34,7 @@ class GDRectifier(Rectifier):
             softMax * jnp.array([loss1, loss2, loss3]))
         return softweightedAverage
 
-        # return jnp.max(
+        # return jnp.sum(
         #     jnp.array([
         #         GDRectifier.loss(H_inv, conics.C1) * weights[0],
         #         GDRectifier.loss(H_inv, conics.C2) * weights[1],
@@ -72,6 +72,7 @@ class GDRectifier(Rectifier):
         """
         warpedConics = ConicsJax(C_img)
         H_inv = jnp.eye(3)
+        # H_inv = H_inv + jax.random.uniform(jax.random.PRNGKey(12124), (3, 3))
         m = jnp.zeros_like(H_inv)
         v = jnp.zeros_like(H_inv)
 
