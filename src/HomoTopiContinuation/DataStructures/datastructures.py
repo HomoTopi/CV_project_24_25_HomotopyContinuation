@@ -325,6 +325,15 @@ class ConicJax:
         semi_axes = jnp.sqrt(1 / jnp.abs(eigvals))
         return semi_axes
 
+    def computeEigvals22(self) -> jnp.ndarray:
+        """
+        Compute the eigenvalues of the top-left 2x2 submatrix of the conic.
+
+        Returns:
+            jnp.ndarray: The eigenvalues of the top-left 2x2 submatrix
+        """
+        return jnp.real(jnp.linalg.eigvals(self._M[:2, :2]))
+
     def applyHomographyFromInv(self, H_inv: jnp.ndarray) -> 'ConicJax':
         """
         Apply a homography to the conic using the inverse of the homography.

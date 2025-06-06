@@ -9,7 +9,7 @@ from .rectifier import Rectifier
 class GDRectifier(Rectifier):
     def loss(H_inv: jnp.array, conic: ConicJax) -> float:
         warpedConic = conic.applyHomographyFromInv(H_inv)
-        axes = warpedConic.computeSemiAxes()
+        axes = warpedConic.computeEigvals22()
         # maxAxis = jnp.max(axes)
         # minAxis = jnp.min(axes)
         tot = jnp.sum(axes)
@@ -50,9 +50,9 @@ class GDRectifier(Rectifier):
     gradient = jax.grad(lossConics, argnums=0)
     gradient = jax.jit(gradient, static_argnames=['conics'])
 
-    def rectify(C_img: Conics, iterations: int = 20000, alpha: float = 1e-8, beta1: float = 0.9, beta2: float = 0.999, epsilon: float = 1e-12, weights=jnp.array([1.0, 1.0, 1.0]), gradientCap=jnp.inf) -> Homography:
+    def rectify(C_img: Conics, iterations: int = 20000, alpha: float = 1e-8, beta1: float = 0.9, beta2: float = 0.999, epsilon: float = 1e-12, weights=jnp.array([1.0, 1.0, 1.0]), gradientCap=jnp.inf, early_stopping: bool = True, patience: int = 100, min_delta: float = 1e-6) -> Homography:
         """
-        Performs rectification of conics using gradient descent with Adam optimization.
+        Performs rectification of conics using gradient descent with Adam optimization and early stopping.
         Args:
             C_img (Conics): The input conics to be rectified.
             iterations (int, optional): Number of optimization iterations. Default is 20000.
@@ -61,7 +61,10 @@ class GDRectifier(Rectifier):
             beta2 (float, optional): Exponential decay rate for the second moment estimates in Adam. Default is 0.999.
             epsilon (float, optional): Small constant for numerical stability in Adam. Default is 1e-8.
             weights (jnp.ndarray, optional): Weights for the loss function. Default is jnp.array([1.0, 1.0, 1.0]).
-            gradientCap (float, optional): Maximum allowed gradient norm for gradient clipping. Default is 5.0.
+            gradientCap (float, optional): Maximum allowed gradient norm for gradient clipping. Default is np.inf.
+            early_stopping (bool, optional): Whether to use early stopping. Default is True.
+            patience (int, optional): Number of iterations to wait for improvement before stopping. Default is 100.
+            min_delta (float, optional): Minimum change in loss to qualify as improvement. Default is 1e-8.
         Returns:
             Homography: The final estimated homography after rectification.
             list[Homography]: List of homographies at each iteration.
@@ -73,10 +76,10 @@ class GDRectifier(Rectifier):
             - Uses Adam optimizer for updating the inverse homography matrix.
             - Tracks the optimization process by storing homographies, losses, gradients, and optimizer states.
             - Prints the loss at each iteration for monitoring convergence.
+            - Stops early if loss does not improve for 'patience' iterations.
         """
         warpedConics = ConicsJax(C_img)
         H_inv = jnp.eye(3)
-        # H_inv = H_inv + jax.random.uniform(jax.random.PRNGKey(12124), (3, 3))
         m = jnp.zeros_like(H_inv)
         v = jnp.zeros_like(H_inv)
 
@@ -86,15 +89,16 @@ class GDRectifier(Rectifier):
         ms = []
         vs = []
 
+        best_loss = float('inf')
+        patience_counter = 0
+
         with tqdm(range(1, iterations+1)) as pbar:
             for i in pbar:
                 grad = GDRectifier.gradient(
                     H_inv, warpedConics, weights=weights)
-                # Ensure the homography is a projective transformation
                 gradNorm = jnp.linalg.norm(grad)
                 gradNormMinned = jnp.minimum(gradNorm, gradientCap)
                 grad = grad / (gradNorm + epsilon) * gradNormMinned
-                # grad = grad.at[2, 0].set(0.0)
 
                 m = beta1 * m + (1 - beta1) * grad
                 v = beta2 * v + (1 - beta2) * (grad ** 2)
@@ -119,6 +123,19 @@ class GDRectifier(Rectifier):
                 vs.append(v)
 
                 H_inv = H_inv - alpha * m_hat / (jnp.sqrt(v_hat) + epsilon)
+
+                # Early stopping logic
+                if early_stopping:
+                    if float(best_loss) - float(current_loss) > min_delta:
+                        best_loss = float(current_loss)
+                        patience_counter = 0
+                    else:
+                        patience_counter += 1
+                    if patience_counter >= patience:
+                        print(
+                            f"Early stopping at iteration {i} with loss {current_loss}")
+                        break
+
         H = jnp.linalg.inv(H_inv)
         return Homography(np.array(H)), Hs, np.array(losses), jnp.array(grads), jnp.array(ms), jnp.array(vs)
 
