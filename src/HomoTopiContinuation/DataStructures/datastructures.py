@@ -1,5 +1,6 @@
 import numpy as np
 from numpy import linalg as la
+import jax.numpy as jnp
 
 CIRCULAR_POINTS = np.array([
     [1, 1j, 0],
@@ -11,12 +12,14 @@ class DistortionParams:
     """
     Parameters for the distortion of the conic.
     """
+
     def __init__(self, k1: float, k2: float, p1: float, p2: float, k3: float):
         self.k1 = k1
         self.k2 = k2
         self.p1 = p1
         self.p2 = p2
         self.k3 = k3
+
 
 class Conic:
     """
@@ -133,17 +136,18 @@ class Conic:
     def fit_conic(points: np.ndarray) -> 'Conic':
         """
         Fit a conic to a set of points applying a least squares method.
-        
+
         Args:
             points (numpy.ndarray): Array of shape (N, 2) containing N points (x,y)
-            
+
         Returns:
             Conic: The fitted conic
         """
         A = np.zeros((points.shape[0], 6))
         for i in range(points.shape[0]):
-            A[i] = np.array([points[i, 0]**2, points[i, 0] * points[i, 1], points[i, 1]**2, points[i, 0], points[i, 1], 1])
-        
+            A[i] = np.array([points[i, 0]**2, points[i, 0] * points[i, 1],
+                            points[i, 1]**2, points[i, 0], points[i, 1], 1])
+
         # Apply constraint f=1 (rightmost coefficient is 1)
         # This solves the homogeneous system Ax=0 with the constraint
         if points.shape[0] > 5:  # Need at least 5 points for a unique solution
@@ -154,7 +158,7 @@ class Conic:
             coef = np.append(params, 1.0)  # [a, b, c, d, e, f=1]
         else:
             raise ValueError("At least 6 points are required to fit a conic")
-        
+
         # Convert algebraic form to matrix form
         # [a b/2 d/2]
         # [b/2 c e/2]
@@ -164,7 +168,7 @@ class Conic:
             [coef[1]/2, coef[2], coef[4]/2],
             [coef[3]/2, coef[4]/2, coef[5]]
         ])
-        
+
         return Conic(M)
 
     def is_ellipse(self) -> bool:
@@ -192,8 +196,8 @@ class Conic:
         Returns:
             numpy.ndarray: The center of the ellipse
         """
-        if self.is_parabola():
-            raise ValueError("Conic has no center because it is a parabola")
+        # if self.is_parabola():
+        #     raise ValueError("Conic has no center because it is a parabola")
 
         A = self.M[:2, :2]
         b = self.M[:2, 2]
@@ -266,6 +270,76 @@ class Conic:
                           np.real(self.M), self.M)
         return self
 
+class ConicJax:
+    """
+    Representation of a conic section using a 3x3 symmetric matrix in JAX.
+    A conic with algebraic form given by ax² + bxy + cy² + dx + ey + f = 0
+    is represented as the matrix
+
+    a b/2 d/2
+    b/2 c e/2
+    d/2 e/2 f
+
+    Attributes:
+        M (jax.numpy.ndarray): A 3x3 symmetric matrix representing the conic
+    """
+
+    def generateFromConic(conic: 'Conic') -> 'ConicJax':
+        """
+        Generate a ConicJax object from a Conic object.
+
+        Args:
+            conic (Conic): The conic object to convert
+
+        Returns:
+            ConicJax: The converted conic in JAX format
+        """
+        return ConicJax(jnp.array(conic.M))
+
+    def __init__(self, M: jnp.ndarray):
+        """
+        Initialize a ConicJax object.
+
+        Args:
+            M (jax.numpy.ndarray): A 3x3 symmetric matrix
+
+        Raises:
+            ValueError: If M is not a 3x3 matrix or not symmetric
+        """
+        # if M.shape != (3, 3):
+        #     raise ValueError(f"Conic matrix must be 3×3, got {M.shape}")
+
+        # if not jnp.allclose(M, M.T):
+        #     raise ValueError("Conic matrix must be symmetric")
+
+        self._M = M
+
+    def computeSemiAxes(self) -> jnp.ndarray:
+        """
+        Compute the semi-axes of the conic.
+
+        Returns:
+            jnp.ndarray: The semi-axes of the conic
+        """
+        eigvals = jnp.linalg.eigvals(self._M[:2, :2])
+        semi_axes = jnp.sqrt(1 / jnp.abs(eigvals))
+        return semi_axes
+
+    def applyHomographyFromInv(self, H_inv: jnp.ndarray) -> 'ConicJax':
+        """
+        Apply a homography to the conic using the inverse of the homography.
+
+        Args:
+            H_inv (jax.numpy.ndarray): The inverse of the homography matrix
+
+        Returns:
+            ConicJax: The conic after applying the homography
+        """
+        # assert H_inv.shape == (3, 3), "H_inv must be a 3x3 matrix"
+        # assert jnp.linalg.det(H_inv) != 0, "H_inv must be invertible"
+        return ConicJax(H_inv.T @ self._M @ H_inv)
+
+
 class Conics:
     """
     A data structure containing three conics.
@@ -331,6 +405,33 @@ class Conics:
         json_str['C2'] = np.array(json_str['C2'])
         json_str['C3'] = np.array(json_str['C3'])
         return Conics(Conic(json_str['C1']), Conic(json_str['C2']), Conic(json_str['C3']))
+
+
+class ConicsJax:
+    def __init__(self, Conics: Conics):
+        """
+        Initialize a ConicsJax object from a Conics object.
+        Args:
+            Conics (Conics): The conics object to convert
+        """
+        self.C1 = ConicJax.generateFromConic(Conics.C1)
+        self.C2 = ConicJax.generateFromConic(Conics.C2)
+        self.C3 = ConicJax.generateFromConic(Conics.C3)
+
+    def __iter__(self):
+        """
+        Return an iterator over the conics.
+        """
+        return iter([self.C1, self.C2, self.C3])
+
+    def getConicsArray(self) -> jnp.ndarray:
+        """
+        Get the conics as a JAX array.
+
+        Returns:
+            jnp.ndarray: The conics as a JAX array
+        """
+        return [self.C1, self.C2, self.C3]
 
 
 class Circle:

@@ -1,5 +1,3 @@
-using HTTP
-using JSON3
 using HomotopyContinuation
 using LinearAlgebra
 
@@ -75,7 +73,7 @@ function findImCP_Direct_MatrixSpace_WholeComplex(params)
     solutions_ = solutions(res, only_real=false, only_finite=false, only_nonsingular=false)
     @info "solutions = " * string(solutions_)
 
-    equations = conicsConstraints
+    equations = vcat(conicsConstraints, normConstraint)
     solutionsEvaluations = [
         norm([Complex{Float64}(subs(eq, Cs => reshape(Conics, size(Cs)), x => sol)) for eq in equations])
         for sol in solutions_
@@ -130,7 +128,7 @@ function findImCP_Direct_MatrixSpace_ReIm(params)
     solutions_ = solutions(res, only_real=false, only_finite=false, only_nonsingular=false)
     # @info "solutions = " * string(solutions_)
 
-    equations = conicsConstraints
+    equations = vcat(conicsConstraints, normConstraint)
     solutionsEvaluations = [
         norm([Complex{Float64}(subs(eq, Cs => reshape(Conics, size(Cs)), x => sol[1:3], y => sol[4:6])) for eq in equations])
         for sol in solutions_
@@ -211,7 +209,14 @@ function findImCP_Optimization_MatrixSpace_ReIm(params)
     sorted_indices = sortperm(solutionsEvaluations)
     # @info "sorted_indices = " * string(sorted_indices)
 
-    smallestIndices = sorted_indices[1:2]
+
+
+    smallestIndices = sorted_indices[1]
+    currentIndex = sorted_indices[2]
+    while norm(solutionsEvaluations[currentIndex] - solutionsEvaluations[smallestIndices[1]]) < tooCloseThreshold
+        currentIndex += 1
+    end
+    smallestIndices = vcat(smallestIndices, currentIndex)
     smallestEvaluations = solutionsEvaluations[smallestIndices]
     @info "smallestEvaluations = " * string(smallestEvaluations)
 
@@ -227,41 +232,16 @@ function findImCP_Optimization_MatrixSpace_ReIm(params)
     return normalizedReconstructedSolutions
 end
 
-# --- HTTP Server Setup ---
-const ROUTER = HTTP.Router()
 
-# Health check endpoint
-HTTP.register!(ROUTER, "GET", "/health", req -> HTTP.Response(200, "OK"))
 
-# Rectification endpoint that matches exactly what rectify.jl does
-function handle_rectify(req::HTTP.Request)
-    try
-        # Parse JSON body
-        json_body = JSON3.read(IOBuffer(req.body))
 
-        # Expecting a structure like: {"conics": [c1_params, c2_params, c3_params]}
-        # where each cX_params is [a, b, c, d, e, f]
-        if !haskey(json_body, :conics) || length(json_body.conics) != 3 || !all(c -> length(c) == 6, json_body.conics)
-            return HTTP.Response(400, JSON3.write((error = "Invalid input format")))
-        end
 
-        # Flatten the parameters
-        params = vcat(Float64.(json_body.conics[1]), Float64.(json_body.conics[2]), Float64.(json_body.conics[3]))
 
-        # Run the rectification process
-        complex_sols = findImCP_Direct_MatrixSpace_ReIm(params)
 
-        # Format response to match rectify.jl output
-        response_body = JSON3.write((complex_sols=complex_sols,))
-        return HTTP.Response(200, ["Content-Type" => "application/json"], body=response_body)
+# Example usage
+c_1 = [1, 0.0, 1.0, 0.0, 0.0, -1.0]
+c_2 = [1, 0.0, 1, -0.0, -1.0, -0.75]
+c_3 = [1.0, 0.0, 1.0, 0.0, 0.0, -2.25]
 
-    catch e
-        return HTTP.Response(500, JSON3.write((error="Internal server error", details=sprint(showerror, e))))
-    end
-end
-
-HTTP.register!(ROUTER, "POST", "/rectify", handle_rectify)
-
-# --- Main Server Execution ---
-@info "Starting Julia Rectifier server on 0.0.0.0:8081..."
-HTTP.serve(ROUTER, "0.0.0.0", 8081)
+params = vcat(c_1, c_2, c_3);
+result = findImCP_Optimization_MatrixSpace_ReIm(params);
