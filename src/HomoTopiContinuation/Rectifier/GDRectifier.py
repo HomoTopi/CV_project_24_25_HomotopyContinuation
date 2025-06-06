@@ -121,3 +121,9 @@ class GDRectifier(Rectifier):
                 H_inv = H_inv - alpha * m_hat / (jnp.sqrt(v_hat) + epsilon)
         H = jnp.linalg.inv(H_inv)
         return Homography(np.array(H)), Hs, np.array(losses), jnp.array(grads), jnp.array(ms), jnp.array(vs)
+
+    def computeImagesOfCircularPoints(self, C_img: Conics) -> np.ndarray:
+        """
+        Compute the image of the circular points.
+        """
+        pass
