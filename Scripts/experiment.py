@@ -8,26 +8,27 @@ import HomoTopiContinuation.Rectifier.numeric_rectifier as nr
 from HomoTopiContinuation.Losser.CircleLosser import CircleLosser
 from HomoTopiContinuation.ConicWarper.ConicWarper import ConicWarper
 from enum import Enum
-
+from HomoTopiContinuation.Rectifier.GDRectifier import GDRectifier
 
 class Rectifiers(Enum):
     standard = sr.StandardRectifier()
     homotopy = hr.HomotopyContinuationRectifier()
     numeric = nr.NumericRectifier()
+    gd = GDRectifier()
 
 
 def sceneDefinition() -> sg.SceneDescription:
     # Parameters
-    f = 100
-    theta = 70
+    f = 10
+    theta = 89
 
     # Define the circles
     c1 = Circle(
-        np.array([10+300, 100]), 5)
+        np.array([0, 0]), 1)
     c2 = Circle(
-        np.array([30+300, 100]), 5)
+        np.array([2, 1]), 0.8)
     c3 = Circle(
-        np.array([50+300, 100]), 5)
+        np.array([1, 2]), 0.5)
 
     print("Circle 1:")
     print(c1.to_conic().M)
@@ -39,14 +40,14 @@ def sceneDefinition() -> sg.SceneDescription:
     print(c3.to_conic().M)
     print([float(p) for p in c3.to_conic().to_algebraic_form()])
 
-    offset = np.array([0, 0, 100])
-    noiseScale = 0.00000003
+    offset = np.array([0, 0, 10])
+    noiseScale = 0.0003
 
-    return sg.SceneDescription(f, theta, offset, c1, c2, c3, noiseScale)
+    return sg.SceneDescription(f, theta, offset, c1, c2, c3, noiseScale, x_rotation=0)
 
 
 def main():
-    rectifier = Rectifiers.homotopy.value
+    rectifier = Rectifiers.gd.value
     losser = CircleLosser
     distortion_Params = DistortionParams(k1=-0.35, k2=0.5, p1=0.001, p2=0.001, k3=0.0)
     sceneDescription = sceneDefinition()
@@ -56,8 +57,9 @@ def main():
     img = sg.SceneGenerator().generate_scene(sceneDescription, debug=True)
     print("[Scene Generated]")
 
+    
     try:
-        H_reconstructed = rectifier.rectify(img.C_img_noise)
+        H_reconstructed, history, losses, grads, ms, vs = GDRectifier.rectify(C_img=img.C_img_noise)
     except Exception as e:
         print("[Rectification Failed]")
         print("Error:")
