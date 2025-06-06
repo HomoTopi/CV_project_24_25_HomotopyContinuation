@@ -26,12 +26,16 @@ class GDRectifier(Rectifier):
         loss1 = GDRectifier.loss(H_inv, conics.C1)
         loss2 = GDRectifier.loss(H_inv, conics.C2)
         loss3 = GDRectifier.loss(H_inv, conics.C3)
-
-        softMax = jnp.exp(jnp.array([loss1, loss2, loss3]))
+        losses = jnp.array([loss1, loss2, loss3])
+        weightedLosses = losses * weights
+        softMax = jnp.exp(weightedLosses)
         softMax /= jnp.sum(softMax)
+        softMax = softMax * weights
+        softMax /= jnp.sum(softMax)  # normalize again
 
         softweightedAverage = jnp.sum(
-            softMax * jnp.array([loss1, loss2, loss3]))
+            softMax * losses
+        )
         return softweightedAverage
 
         # return jnp.sum(
@@ -46,7 +50,7 @@ class GDRectifier(Rectifier):
     gradient = jax.grad(lossConics, argnums=0)
     gradient = jax.jit(gradient, static_argnames=['conics'])
 
-    def rectify(C_img: Conics, iterations: int = 20000, alpha: float = 1e-8, beta1: float = 0.9, beta2: float = 0.999, epsilon: float = 1e-12, weights=jnp.array([1.0, 1.0, 1.0]), gradientCap=5.0) -> Homography:
+    def rectify(C_img: Conics, iterations: int = 20000, alpha: float = 1e-8, beta1: float = 0.9, beta2: float = 0.999, epsilon: float = 1e-12, weights=jnp.array([1.0, 1.0, 1.0]), gradientCap=jnp.inf) -> Homography:
         """
         Performs rectification of conics using gradient descent with Adam optimization.
         Args:
