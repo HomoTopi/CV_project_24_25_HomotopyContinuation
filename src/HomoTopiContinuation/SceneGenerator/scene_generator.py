@@ -130,7 +130,8 @@ class SceneGenerator:
         """
         # Focal length
         f = scene_description.f
-        # Convert y_rotation from degrees to radians
+        # Convert rotations from degrees to radians
+        x_rotation = np.radians(scene_description.x_rotation)
         y_rotation = np.radians(scene_description.y_rotation)
 
         # Intrinsic matrix (assuming natural camera and principal point at (0,0))
@@ -138,9 +139,21 @@ class SceneGenerator:
                       [0, f, 100],
                       [0, 0, 1]])
 
+        # Compute rotation matrices
+        Rx = np.array([[1, 0, 0],
+                      [0, np.cos(x_rotation), -np.sin(x_rotation)],
+                      [0, np.sin(x_rotation), np.cos(x_rotation)]])
+        
+        Ry = np.array([[np.cos(y_rotation), 0, np.sin(y_rotation)],
+                      [0, 1, 0],
+                      [-np.sin(y_rotation), 0, np.cos(y_rotation)]])
+
+        # Combined rotation (first x, then y)
+        R = Ry @ Rx
+
         # Reference frame
-        r_pi1 = np.array([1, 0, 0])
-        r_p12 = np.array([0, np.cos(y_rotation), np.sin(y_rotation)])
+        r_pi1 = R[:, 0]  # First column of rotation matrix (x-axis)
+        r_p12 = R[:, 1]  # Second column of rotation matrix (y-axis)
         o_pi = scene_description.offset
 
         # Reference matrix

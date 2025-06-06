@@ -484,6 +484,7 @@ class SceneDescription:
 
     Attributes:
         f (float): Focal length of the camera
+        x_rotation (float): Camera rotation angle in degrees around the x-axis
         y_rotation (float): Camera rotation angle in degrees around the y-axis
         offset (numpy.ndarray): Offset of the camera from the origin
         circle1 (circle): First circle
@@ -491,12 +492,13 @@ class SceneDescription:
         circle3 (circle): Third circle
     """
 
-    def __init__(self, f: float, y_rotation: float, offset: np.ndarray, circle1: Circle, circle2: Circle, circle3: Circle, noiseScale: float = 0):
+    def __init__(self, f: float,  y_rotation: float, offset: np.ndarray, circle1: Circle, circle2: Circle, circle3: Circle, noiseScale: float = 0, x_rotation: float = 0.0):
         """
         Initialize a SceneDescription object.
 
         Args:
             f (float): Focal length of the camera
+            x_rotation (float): Camera rotation angle around the x-axis in degrees
             y_rotation (float): Camera rotation angle around the y-axis in degrees 
             offset (numpy.ndarray): Offset of the camera from the origin
             circle1 (Circle): Parameters of the first circle
@@ -512,6 +514,7 @@ class SceneDescription:
         if offset.shape != (3,):
             raise ValueError("Offset must be a 3D vector")
         self.f = f
+        self.x_rotation = x_rotation
         self.y_rotation = y_rotation
         self.circle1 = circle1
         self.circle2 = circle2
@@ -531,11 +534,13 @@ class SceneDescription:
         json_str['circle3'] = Circle(
             np.array(json_str['circle3']['center']), json_str['circle3']['radius'])
         json_str['f'] = float(json_str['f'])
+        json_str['x_rotation'] = float(json_str['x_rotation'])
         json_str['y_rotation'] = float(json_str['y_rotation'])
         json_str['noiseScale'] = float(json_str['noiseScale'])
 
         return SceneDescription(
             json_str['f'],
+            json_str['x_rotation'],
             json_str['y_rotation'],
             json_str['offset'],
             json_str['circle1'],
@@ -550,6 +555,7 @@ class SceneDescription:
         """
         return {
             "f": self.f,
+            "x_rotation": self.x_rotation,
             "y_rotation": self.y_rotation,
             "offset": self.offset.tolist(),
             "circle1": {
