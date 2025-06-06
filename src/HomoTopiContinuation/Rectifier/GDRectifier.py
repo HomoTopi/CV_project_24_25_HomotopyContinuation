@@ -2,7 +2,7 @@ import numpy as np
 import jax.numpy as jnp
 import jax
 from HomoTopiContinuation.DataStructures.datastructures import Circle, ConicJax, ConicsJax, Homography, Conics
-from tqdm.notebook import tqdm
+from tqdm import tqdm
 from .rectifier import Rectifier
 
 
