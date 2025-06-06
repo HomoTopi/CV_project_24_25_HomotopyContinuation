@@ -373,13 +373,7 @@ class Plotter:
 
         # Second plot (in the middle)
         self.new3DAxis(title="3D Scene")
-        self.plotCamera( 
-                       yaw=0,  # yaw is not used in the scene description
-                       pitch=sceneDescription.x_rotation,  # pitch corresponds to x_rotation
-                       roll=sceneDescription.y_rotation,   # roll corresponds to y_rotation
-                       size=0.2,  # keep default size
-                       color='blue',  # keep default color
-                       bodyRatio=0.5)  # keep default body ratio
+        self.plotCamera()  # keep default body ratio
         self.drawReferenceFrame(sceneDescription)
         self.plotCircle3D(sceneDescription.circle1,
                           sceneDescription, color=colorC1, name="Circle 1")

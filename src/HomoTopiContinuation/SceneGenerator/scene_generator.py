@@ -135,25 +135,30 @@ class SceneGenerator:
         y_rotation = np.radians(scene_description.y_rotation)
 
         # Intrinsic matrix (assuming natural camera and principal point at (0,0))
-        K = np.array([[f, 0, 100],
-                      [0, f, 100],
+        K = np.array([[f, 0, 0],
+                      [0, f, 0],
                       [0, 0, 1]])
 
         # Compute rotation matrices
-        Rx = np.array([[1, 0, 0],
-                      [0, np.cos(x_rotation), -np.sin(x_rotation)],
-                      [0, np.sin(x_rotation), np.cos(x_rotation)]])
+        #Rx = np.array([[1, 0, 0],
+        #              [0, np.cos(x_rotation), -np.sin(x_rotation)],
+        #              [0, np.sin(x_rotation), np.cos(x_rotation)]])
         
-        Ry = np.array([[np.cos(y_rotation), 0, np.sin(y_rotation)],
-                      [0, 1, 0],
-                      [-np.sin(y_rotation), 0, np.cos(y_rotation)]])
+        #Ry = np.array([[np.cos(y_rotation), 0, np.sin(y_rotation)],
+        #              [0, 1, 0],
+        #              [-np.sin(y_rotation), 0, np.cos(y_rotation)]])
 
         # Combined rotation (first x, then y)
-        R = Ry @ Rx
+        #R = Ry @ Rx
 
         # Reference frame
-        r_pi1 = R[:, 0]  # First column of rotation matrix (x-axis)
-        r_p12 = R[:, 1]  # Second column of rotation matrix (y-axis)
+        #r_pi1 = R[:, 0]  # First column of rotation matrix (x-axis)
+        #r_p12 = R[:, 1]  # Second column of rotation matrix (y-axis)
+        #o_pi = scene_description.offset
+
+        # Reference frame
+        r_pi1 = np.array([1, 0, 0])
+        r_p12 = np.array([0, np.cos(y_rotation), np.sin(y_rotation)])
         o_pi = scene_description.offset
 
         # Reference matrix
