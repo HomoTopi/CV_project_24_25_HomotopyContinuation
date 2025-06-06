@@ -256,6 +256,15 @@ class Conic:
         M_centered = self.M.copy() / -k
         return Conic(M_centered)
 
+    def normalize(self, threshold: float = 1e-6) -> 'Conic':
+        """
+        Normalize the conic matrix.
+        """
+        self.M = self.M / self.M[2,2]
+        self.M[np.abs(self.M) < threshold] = 0
+        self.M = np.where(np.imag(self.M) < threshold,
+                          np.real(self.M), self.M)
+        return self
 
 class Conics:
     """
@@ -490,6 +499,16 @@ class Homography:
         # set to 0 all the real or imaginary parts of H with a magnitude less than threshold
         H = np.real_if_close(H, tol=self.threshold)
         self.H = H
+        
+    def normalize(self, threshold: float = 1e-6) -> 'Homography':
+        """
+        Normalize the homography matrix.
+        """
+        self.H = self.H / self.H[2,2]
+        self.H[np.abs(self.H) < threshold] = 0
+        self.H = np.where(np.imag(self.H) < threshold,
+                          np.real(self.H), self.H)
+        return self
 
     def __call__(self) -> np.ndarray:
         """
@@ -545,6 +564,11 @@ class Homography:
         json_str['H'] = np.array(json_str['H'])
         return Homography(json_str['H'])
 
+    def __str__(self) -> str:
+        """
+        Return a string representation of the homography.
+        """
+        return self.H.__str__()
 
 class Img:
     """

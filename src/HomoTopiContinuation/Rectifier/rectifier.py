@@ -74,6 +74,11 @@ class Rectifier(ABC):
     def _compute_h_from_svd(self, imDCCP: np.ndarray) -> Homography:
         """
         Compute the Homography from the SVD of the image dual conic.
+        
+        Args:
+            imDCCP: image of the dual conic
+            
+        Return: Homography
         """
 
         assert imDCCP.shape == (3, 3), "imDCCP must be a 3x3 matrix"
@@ -98,9 +103,16 @@ class Rectifier(ABC):
 
         return Homography(H)
 
+    
     def compute_imDCCP_from_solutions(self, sols: np.ndarray) -> np.ndarray:
         """
         Compute the image dual conic from the solutions of the conic equations.
+
+        Args:
+            sols (np.ndarray): The image of the circular points in the form of a 3xN array
+
+        Returns:
+            np.ndarray: The image dual conic
 
         Raises:
             ValueError: If less than 2 complex solutions are found
