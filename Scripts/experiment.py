@@ -10,6 +10,7 @@ from HomoTopiContinuation.ConicWarper.ConicWarper import ConicWarper
 from enum import Enum
 from HomoTopiContinuation.Rectifier.GDRectifier import GDRectifier
 
+
 class Rectifiers(Enum):
     standard = sr.StandardRectifier()
     homotopy = hr.HomotopyContinuationRectifier()
@@ -49,17 +50,19 @@ def sceneDefinition() -> sg.SceneDescription:
 def main():
     rectifier = Rectifiers.gd.value
     losser = CircleLosser
-    distortion_Params = DistortionParams(k1=-0.35, k2=0.5, p1=0.001, p2=0.001, k3=0.0)
+    distortion_Params = DistortionParams(
+        k1=-0.35, k2=0.5, p1=0.001, p2=0.001, k3=0.0)
     sceneDescription = sceneDefinition()
     print("[Scene Described]")
 
-    #img = sg.SceneGenerator().generate_scene(sceneDescription, distortion_Params=distortion_Params, debug=True)
+    # img = sg.SceneGenerator().generate_scene(sceneDescription, distortion_Params=distortion_Params, debug=True)
     img = sg.SceneGenerator().generate_scene(sceneDescription, debug=True)
     print("[Scene Generated]")
 
-    
     try:
-        H_reconstructed, history, losses, grads, ms, vs = GDRectifier.rectify(C_img=img.C_img_noise)
+        H_reconstructed, history, losses, grads, ms, vs = GDRectifier.rectify(
+            C_img=img.C_img_noise, early_stopping=True, alpha=1e-3)
+
     except Exception as e:
         print("[Rectification Failed]")
         print("Error:")
@@ -74,13 +77,13 @@ def main():
 
     print("True Homography:")
     print(img.h_true.H / img.h_true.H[2, 2])
-    
+
     print("Image Conics")
-    
-    assert img.C_img.C1.is_ellipse() , "the Image Conic 1 is not an ellipse"
-    assert img.C_img.C2.is_ellipse() , "the Image Conic 2 is not an ellipse"
-    assert img.C_img.C3.is_ellipse() , "the Image Conic 3 is not an ellipse"
-    
+
+    assert img.C_img.C1.is_ellipse(), "the Image Conic 1 is not an ellipse"
+    assert img.C_img.C2.is_ellipse(), "the Image Conic 2 is not an ellipse"
+    assert img.C_img.C3.is_ellipse(), "the Image Conic 3 is not an ellipse"
+
     print(img.C_img.C1.M)
     print(img.C_img.C2.M)
     print(img.C_img.C3.M)
@@ -93,7 +96,7 @@ def main():
     print("[Conics Warped]")
     print("Warped Conics:")
     print(warpedConics.C1.M)
-    
+
     # Compute the loss
     originalLoss = losser.computeCircleLoss(sceneDescription, img.C_img)
     print("Original Loss:")
