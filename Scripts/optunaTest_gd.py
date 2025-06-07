@@ -27,9 +27,13 @@ def objective(trial):
     
     offset_x, offset_y, offset_z = 0, 0, 3
     
-    y_rotation = trial.suggest_float("y_rotation", 5, 45)
-    x_rotation = trial.suggest_float("x_rotation", 5, 45)
+    #y_rotation = trial.suggest_float("y_rotation", 5, 45)
+    #x_rotation = trial.suggest_float("x_rotation", 5, 45)
     
+    alpha = trial.suggest_float("alpha", 1e-3, 1e-1)
+    beta1 = trial.suggest_float("beta1", 0.0, 1.0)
+    beta2 = trial.suggest_float("beta2", 0.0, 1.0)
+    epsilon = trial.suggest_float("epsilon", 1e-12, 1e-1)
     
     ## distortion params ###
     
@@ -46,16 +50,17 @@ def objective(trial):
         circle1 = Circle(np.array([c1_centre_x, c1_centre_y]), c1_radius)
         circle2 = Circle(np.array([c2_centre_x, c2_centre_y]), c2_radius)
         circle3 = Circle(np.array([c3_centre_x, c3_centre_y]), c3_radius)
-        scene = SceneDescription(f, y_rotation, np.array([offset_x, offset_y, offset_z]),
-                                 circle1, circle2, circle3, x_rotation=x_rotation)
+        scene = SceneDescription(f, 80, np.array([offset_x, offset_y, offset_z]),
+                                 circle1, circle2, circle3, x_rotation=0)
         scene_generator = SceneGenerator()
         image = scene_generator.generate_scene(scene)        
         rectifier = GDRectifier()
         H_computed, history, losses, grads, ms, vs = GDRectifier.rectify(C_img=image.C_img_noise,
             iterations=3000,
-            alpha=1e-3, 
-            beta1=.99, 
-            beta2=.999, 
+            alpha=alpha, 
+            beta1=beta1, 
+            beta2=beta2, 
+            epsilon=epsilon,
             weights=jnp.array([1.0, 1.0, 1.0])
         )
         homography = H_computed
