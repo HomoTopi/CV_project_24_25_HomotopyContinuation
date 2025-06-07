@@ -50,7 +50,7 @@ class GDRectifier(Rectifier):
     gradient = jax.grad(lossConics, argnums=0)
     gradient = jax.jit(gradient, static_argnames=['conics'])
 
-    def rectify(C_img: Conics, iterations: int = 20000, alpha: float = 1e-8, beta1: float = 0.9, beta2: float = 0.999, epsilon: float = 1e-12, weights=jnp.array([1.0, 1.0, 1.0]), gradientCap=jnp.inf, early_stopping: bool = True, patience: int = 100, min_delta: float = 1e-6) -> Homography:
+    def rectify(C_img: Conics, iterations: int = 20000, alpha: float = 1e-3, beta1: float = 0.99, beta2: float = 0.999, epsilon: float = 1e-12, weights=jnp.array([1.0, 1.0, 1.0]), gradientCap=jnp.inf, early_stopping: bool = True, patience: int = 300, min_delta: float = 1e-6) -> Homography:
         """
         Performs rectification of conics using gradient descent with Adam optimization and early stopping.
         Args:
