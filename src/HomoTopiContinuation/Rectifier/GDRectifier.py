@@ -144,3 +144,9 @@ class GDRectifier(Rectifier):
         Compute the image of the circular points.
         """
         pass
+
+
+if __name__ == "__main__":
+    print("This module is not meant to be run directly. Use it as part of a larger application.")
+    # Example usage can be added here if needed for testing purposes.
+    # However, this is typically done in a separate script or test suite.
