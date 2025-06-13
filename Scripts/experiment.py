@@ -20,8 +20,8 @@ class Rectifiers(Enum):
 
 def sceneDefinition() -> sg.SceneDescription:
     # Parameters
-    f = 10
-    theta = 89
+    f = 2
+    theta = 80
 
     # Define the circles
     c1 = Circle(
@@ -48,7 +48,7 @@ def sceneDefinition() -> sg.SceneDescription:
 
 
 def main():
-    rectifier = Rectifiers.gd.value
+    rectifier = Rectifiers.homotopy.value
     losser = CircleLosser
     distortion_Params = DistortionParams(
         k1=-0.35, k2=0.5, p1=0.001, p2=0.001, k3=0.0)
@@ -60,6 +60,8 @@ def main():
     print("[Scene Generated]")
 
     try:
+        #H_reconstructed = rectifier.rectify(img.C_img_noise)
+        H_reconstructed, history, losses, grads, ms, vs = GDRectifier.rectify(C_img=img.C_img_noise, alpha=0.075, beta1=0.5, beta2=0.9, epsilon=1e-3)
         H_reconstructed, history, losses, grads, ms, vs = GDRectifier.rectify(
             C_img=img.C_img_noise, early_stopping=True, alpha=1e-3)
 

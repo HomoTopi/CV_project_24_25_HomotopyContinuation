@@ -2,10 +2,17 @@
 
 This repository contains a comprehensive framework to explore the application of homotopy continuation techniques for image rectification and to investigate whether this method is more robust with respect to standard numerical and symbolic solvers.
 
+## Documentation
+
+A detailed description of the project is available in the [report](deliverables/report.pdf).
+
 ## Authors - HomoTopi
-* Filippo Balzarin
+* Filippo Balzarini
 * Paolo Ginefra
 * Martina Missana
+
+
+
 
 ## Overview
 
