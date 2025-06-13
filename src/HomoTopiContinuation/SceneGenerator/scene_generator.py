@@ -139,30 +139,26 @@ class SceneGenerator:
                       [0, f, 0],
                       [0, 0, 1]])
 
-        # Compute rotation matrices
-        #Rx = np.array([[1, 0, 0],
-        #              [0, np.cos(x_rotation), -np.sin(x_rotation)],
-        #              [0, np.sin(x_rotation), np.cos(x_rotation)]])
+        # Reference frame
+        # First compute the rotation matrices
+        Rx = np.array([[1, 0, 0],
+                      [0, np.cos(x_rotation), -np.sin(x_rotation)],
+                      [0, np.sin(x_rotation), np.cos(x_rotation)]])
         
-        #Ry = np.array([[np.cos(y_rotation), 0, np.sin(y_rotation)],
-        #              [0, 1, 0],
-        #              [-np.sin(y_rotation), 0, np.cos(y_rotation)]])
+        Ry = np.array([[np.cos(y_rotation), 0, np.sin(y_rotation)],
+                      [0, 1, 0],
+                      [-np.sin(y_rotation), 0, np.cos(y_rotation)]])
 
         # Combined rotation (first x, then y)
-        #R = Ry @ Rx
+        R = Ry @ Rx
 
-        # Reference frame
-        #r_pi1 = R[:, 0]  # First column of rotation matrix (x-axis)
-        #r_p12 = R[:, 1]  # Second column of rotation matrix (y-axis)
-        #o_pi = scene_description.offset
-
-        # Reference frame
-        r_pi1 = np.array([1, 0, 0])
-        r_p12 = np.array([0, np.cos(y_rotation), np.sin(y_rotation)])
+        # Get the reference frame vectors from the rotation matrix
+        r_pi1 = R[:, 0]  # First column of rotation matrix (x-axis)
+        r_pi2 = R[:, 1]  # Second column of rotation matrix (y-axis)
         o_pi = scene_description.offset
 
         # Reference matrix
-        referenceMatrix = np.array([r_pi1, r_p12, o_pi]).T
+        referenceMatrix = np.array([r_pi1, r_pi2, o_pi]).T
 
         return Homography(K @ referenceMatrix)
 
