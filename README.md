@@ -6,7 +6,7 @@ This repository provides a comprehensive framework for exploring the use of grad
 
 A detailed description of the project is available in the [report](deliverables/report.pdf).
 
-Sample videos demonstrating image rectification via gradient descent can be found [here](Notebooks\GD_tests\rectificationVideos).
+Sample videos demonstrating image rectification via gradient descent can be found [here](Notebooks/GD_tests/rectificationVideos).
 
 ## Authors - HomoTopi
 * Filippo Balzarini
