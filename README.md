@@ -1,20 +1,23 @@
 # Computer Vision Project 2024/2025 - Homotopy Continuation
 
-This repository contains a comprehensive framework to explore the application of homotopy continuation techniques for image rectification and to investigate whether this method is more robust with respect to standard numerical and symbolic solvers.
+This repository provides a comprehensive framework for exploring the use of gradient descent and homotopy continuation techniques in image rectification. The goal is to evaluate whether these methods offer greater robustness compared to traditional numerical and symbolic solvers, and to determine which of the two performs more effectively.
 
 ## Documentation
 
 A detailed description of the project is available in the [report](deliverables/report.pdf).
+
+Sample videos demonstrating image rectification via gradient descent can be found [here](Notebooks\GD_tests\rectificationVideos).
 
 ## Authors - HomoTopi
 * Filippo Balzarini
 * Paolo Ginefra
 * Martina Missana
 
-
-
-
 ## Overview
+
+### Gradient Descent
+
+The project leverages the usage of Adam's optimization method to perform image rectification.
 
 ### Homotopy Continuation
 
@@ -35,12 +38,9 @@ with the following pipeline:
   Abstract class to reconstruct the scene using different approaches:
     * [Homotopy Rectifier](src/HomoTopiContinuation/Rectifier/homotopyc_rectifier.py)
     * [Numeric Rectifier](src/HomoTopiContinuation/Rectifier/numeric_rectifier.py)
+    * [Gradient Descent Rectifier](src/HomoTopiContinuation/Rectifier/GDRectifier.py)
 
   It reconstruct the image computing an homography matrix.
-
-- **[Conic Warper](src/HomoTopiContinuation/ConicWarper/ConicWarper.py)**:
-  
-  Warps the conics using the computed homography.
 
 - **[Losser](src/HomoTopiContinuation/Losser/Losser.py)**:
   
